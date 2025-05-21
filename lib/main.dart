@@ -4,10 +4,11 @@ import 'package:worksmart/nav/nav.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/secrets.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // required before any platform-specific/async initialization in main()
 
   await Supabase.initialize(url: supabaseProjectUrl, anonKey: supabaseAnonKey);
+
   runApp(
     MyApp(),
     // ChangeNotifierProvider(

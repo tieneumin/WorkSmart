@@ -73,14 +73,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-  cross_file:
-    dependency: transitive
-    description:
-      name: cross_file
-      sha256: "7caf6a750a0c04effbb52a676dce9a4a592e10ad35c34d6d2d0e4811160d5670"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.4+2"
   crypto:
     dependency: transitive
     description:
@@ -121,14 +113,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
-  file_picker:
-    dependency: "direct main"
-    description:
-      name: file_picker
-      sha256: "77f8e81d22d2a07d0dee2c62e1dda71dc1da73bf43bb2d45af09727406167964"
-      url: "https://pub.dev"
-    source: hosted
-    version: "10.1.9"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -142,14 +126,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
-  flutter_plugin_android_lifecycle:
-    dependency: transitive
-    description:
-      name: flutter_plugin_android_lifecycle
-      sha256: f948e346c12f8d5480d2825e03de228d0eb8c3a737e4cdaa122267b89c022b5e
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.28"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -241,7 +217,7 @@ packages:
     source: hosted
     version: "2.1.0"
   http:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: http
       sha256: "2c11f3f94c687ee9bad77c171151672986360b2b001d109814ee7140b2cf261b"
@@ -336,14 +312,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  nested:
-    dependency: transitive
-    description:
-      name: nested
-      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -424,14 +392,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
-  provider:
-    dependency: "direct main"
-    description:
-      name: provider
-      sha256: "4abbd070a04e9ddc287673bf5a030c7ca8b685ff70218720abab8b092f53dd84"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.5"
   realtime_client:
     dependency: transitive
     description:
@@ -457,7 +417,7 @@ packages:
     source: hosted
     version: "0.28.0"
   shared_preferences:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: shared_preferences
       sha256: "6e8bf70b7fef813df4e9a36f658ac46d107db4b4cfe1048b477d4e453a8159f5"
@@ -701,14 +661,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
-  win32:
-    dependency: transitive
-    description:
-      name: win32
-      sha256: "329edf97fdd893e0f1e3b9e88d6a0e627128cc17cc316a8d67fda8f1451178ba"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.13.0"
   xdg_directories:
     dependency: transitive
     description:
