@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:worksmart/service/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:worksmart/core/utils.dart';
+import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
-import 'package:worksmart/secrets.dart';
+import 'package:worksmart/core/utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,12 +13,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static final supabase = Supabase.instance.client;
+  final _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _emailError;
   String? _passwordError;
-  bool _obscurePassword = true;
+  bool _hidePassword = true;
 
   @override
   void initState() {
@@ -28,10 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _setupAuthListener() {
-    supabase.auth.onAuthStateChange.listen((data) {
+    _authService.supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedIn) {
         if (mounted) {
-          context.pushReplacementNamed(Screen.employeeHome.name);
+          context.pushReplacementNamed(Screen.home.name);
         }
       }
     });
@@ -50,55 +49,40 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      final res = await supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-
-      // TODO?
-    } catch (e) {
-      if (mounted) showErrorSnackbar(e.toString(), context);
+      await _authService.signInWithPassword(email, password);
+    } on AuthException catch (e) {
+      if (mounted) showErrorSnackbar(e.message, context);
     }
   }
 
-  Future<void> _googleSignIn() async {
+  Future<void> _signInWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn(serverClientId: supabaseClientId);
-      final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser!.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      if (accessToken == null) throw "No access token found";
-      if (idToken == null) throw "No ID token found";
-
-      final res = await supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-
-      // TODO: save in users
-      debugPrint("${res.user} --- ${res.session}");
-    } catch (e) {
-      if (mounted) showErrorSnackbar(e.toString(), context);
+      final res = await _authService.signInWithGoogle();
+    } on AuthException catch (e) {
+      if (mounted) showErrorSnackbar(e.message, context);
     }
   }
 
-  void _navigateToSignUp() {
-    context.pushNamed(Screen.signup.name);
+  void _navigateToSignUp() => context.pushNamed(Screen.signup.name);
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Log In")),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Image.asset("assets/logo.png"),
+              const SizedBox(height: 8.0),
               TextField(
                 controller: _emailController,
                 onChanged: (_) => setState(() => _emailError = null),
@@ -112,33 +96,29 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 onChanged: (_) => setState(() => _passwordError = null),
-                obscureText: _obscurePassword,
+                obscureText: _hidePassword,
                 decoration: InputDecoration(
                   labelText: "Password",
                   errorText: _passwordError,
                   border: OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                      _hidePassword ? Icons.visibility_off : Icons.visibility,
                     ),
                     onPressed:
-                        () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
+                        () => setState(() => _hidePassword = !_hidePassword),
                   ),
                 ),
               ),
               const SizedBox(height: 16.0),
               FilledButton(
                 onPressed: _signInWithPassword,
-                child: const Text("Sign in"),
+                child: const Text("Log In"),
               ),
               const SizedBox(height: 8.0),
               FilledButton.icon(
-                onPressed: _googleSignIn,
-                label: const Text("Sign in with Google"),
+                onPressed: _signInWithGoogle,
+                label: const Text("Log in with Google"),
                 icon: Image.asset(
                   "assets/google.png",
                   width: 24.0,

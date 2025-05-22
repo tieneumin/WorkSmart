@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/ui/auth/login_screen.dart';
 import 'package:worksmart/ui/auth/sign_up_screen.dart';
-import 'package:worksmart/ui/employee/employee_tab_container.dart';
+import 'package:worksmart/ui/home/home_tab_container.dart';
 
 class Nav {
   static const initial = "/login";
@@ -17,16 +17,11 @@ class Nav {
       builder: (context, state) => const SignUpScreen(),
     ),
     GoRoute(
-      path: "/employee",
-      name: Screen.employeeHome.name,
-      builder: (context, state) => const EmployeeTabContainer(),
+      path: "/home",
+      name: Screen.home.name,
+      builder: (context, state) => const HomeTabContainer(),
     ),
-    // GoRoute(
-    //   path: "/employer",
-    //   name: Screen.employerHome.name,
-    //   builder: (context, state) => const EmployerHomeScreen(),
-    // ),
   ];
 }
 
-enum Screen { login, signup, employeeHome, employerHome }
+enum Screen { login, signup, home }

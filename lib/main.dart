@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:worksmart/nav/nav.dart';
-import 'package:go_router/go_router.dart';
 import 'package:worksmart/secrets.dart';
+import 'package:go_router/go_router.dart';
+import 'package:worksmart/nav/nav.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // required before any platform-specific/async initialization in main()
@@ -24,9 +24,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'WorkSmart',
+      title: "WorkSmart",
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue.shade700,
+          primary: Colors.blue.shade700,
+        ),
         useMaterial3: true,
       ),
       routerConfig: GoRouter(routes: Nav.routes, initialLocation: Nav.initial),

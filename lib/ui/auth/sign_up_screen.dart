@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:worksmart/service/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:worksmart/core/utils.dart';
+import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
+import 'package:worksmart/core/utils.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -12,15 +13,15 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  static final supabase = Supabase.instance.client;
+  final _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
   String? _emailError;
   String? _passwordError;
   String? _confirmPassError;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPass = true;
+  bool _hidePassword = true;
+  bool _hideConfirmPass = true;
 
   @override
   void initState() {
@@ -29,10 +30,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _setupAuthListener() {
-    supabase.auth.onAuthStateChange.listen((data) {
+    _authService.supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedIn) {
         if (mounted) {
-          context.pushReplacementNamed(Screen.employeeHome.name);
+          context.pushReplacementNamed(Screen.home.name);
         }
       }
     });
@@ -47,9 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         if (email.isEmpty) _emailError = "Field is required";
         if (password.isEmpty) _passwordError = "Field is required";
-        if (confirmPass.isEmpty) {
-          _confirmPassError = "Field is required";
-        }
+        if (confirmPass.isEmpty) _confirmPassError = "Field is required";
       });
       return;
     }
@@ -59,14 +58,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
-      final res = await supabase.auth.signUp(email: email, password: password);
-
-      // TODO: save in users
-      debugPrint("${res.user} --- ${res.session}");
-    } catch (e) {
-      if (mounted) showErrorSnackbar(e.toString(), context);
+      await _authService.signUp(email, password);
+    } on AuthException catch (e) {
+      if (mounted) showErrorSnackbar(e.message, context);
     }
   }
+
+  void _navigateToLogin() => context.pop();
 
   @override
   void dispose() {
@@ -79,13 +77,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Image.asset("assets/logo.png"),
+              const SizedBox(height: 8.0),
               TextField(
                 controller: _emailController,
                 onChanged: (_) => setState(() => _emailError = null),
@@ -99,21 +98,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
               TextField(
                 controller: _passwordController,
                 onChanged: (_) => setState(() => _passwordError = null),
-                obscureText: _obscurePassword,
+                obscureText: _hidePassword,
                 decoration: InputDecoration(
                   labelText: "Password",
                   errorText: _passwordError,
                   border: OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                      _hidePassword ? Icons.visibility_off : Icons.visibility,
                     ),
                     onPressed:
-                        () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
+                        () => setState(() => _hidePassword = !_hidePassword),
                   ),
                 ),
               ),
@@ -121,26 +116,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
               TextField(
                 controller: _confirmPassController,
                 onChanged: (_) => setState(() => _confirmPassError = null),
-                obscureText: _obscureConfirmPass,
+                obscureText: _hideConfirmPass,
                 decoration: InputDecoration(
                   labelText: "Confirm password",
                   errorText: _confirmPassError,
                   border: OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPass
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                      _hideConfirmPass
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed:
                         () => setState(
-                          () => _obscureConfirmPass = !_obscureConfirmPass,
+                          () => _hideConfirmPass = !_hideConfirmPass,
                         ),
                   ),
                 ),
               ),
               const SizedBox(height: 16.0),
               FilledButton(onPressed: _signUp, child: const Text("Sign Up")),
+              TextButton(
+                onPressed: _navigateToLogin,
+                child: const Text("Already have an account? Log in"),
+              ),
             ],
           ),
         ),
