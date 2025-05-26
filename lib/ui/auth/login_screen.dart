@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     try {
-      final res = await _authService.signInWithGoogle();
+      await _authService.signInWithGoogle();
     } on AuthException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
     }

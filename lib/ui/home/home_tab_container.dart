@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:worksmart/ui/home/add_request_screen.dart';
 import 'package:worksmart/ui/home/employee/employee_screen.dart';
 import 'package:worksmart/ui/home/employer/employer_screen.dart';
+import 'package:worksmart/ui/home/requests_screen.dart';
 
 class HomeTabContainer extends StatefulWidget {
   const HomeTabContainer({super.key});
@@ -10,7 +12,7 @@ class HomeTabContainer extends StatefulWidget {
 }
 
 class _HomeTabContainerState extends State<HomeTabContainer> {
-  late final List<Widget> _tabs;
+  // late final List<Widget> _tabs;
 
   @override
   void initState() {
@@ -37,11 +39,9 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: _tabs.length,
+      length: 2,
       child: Scaffold(
-        body: TabBarView(
-          children: [TestEmployeeScreen(), TestEmployerScreen()],
-        ),
+        body: TabBarView(children: [RequestsScreen(), AddRequestScreen()]),
         // body: TabBarView(children: _tabs),
         bottomNavigationBar: TabBar(
           indicatorColor: Colors.black,

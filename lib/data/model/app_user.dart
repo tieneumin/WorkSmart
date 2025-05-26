@@ -1,12 +1,12 @@
 class AppUser {
-  int? id;
+  final String id;
   final String email;
   String role;
   double salary;
   final DateTime createdAt;
 
   AppUser({
-    this.id,
+    required this.id,
     required this.email,
     this.role = "employee",
     this.salary = 0.0,
@@ -14,7 +14,7 @@ class AppUser {
   }) : createdAt = createdAt ?? DateTime.now();
 
   AppUser copy({
-    int? id,
+    String? id,
     String? email,
     String? role,
     double? salary,
