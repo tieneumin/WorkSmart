@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:worksmart/service/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:go_router/go_router.dart';
-import 'package:worksmart/nav/nav.dart';
 import 'package:worksmart/core/utils.dart';
+import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -25,18 +24,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    _setupAuthListener();
     super.initState();
-  }
-
-  void _setupAuthListener() {
-    _authService.supabase.auth.onAuthStateChange.listen((data) {
-      if (data.event == AuthChangeEvent.signedIn) {
-        if (mounted) {
-          context.pushReplacementNamed(Screen.home.name);
-        }
-      }
-    });
+    _authService.listenForAuthChanges(context);
   }
 
   Future<void> _signUp() async {

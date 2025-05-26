@@ -8,32 +8,27 @@ class RequestSupabase {
     return _instance;
   }
 
-  static final _supabase = Supabase.instance.client;
+  final supabase = Supabase.instance.client;
   static const _table = "requests";
 
-  Future<List<Request>> getAllUsers() async {
-    final res = await _supabase
+  Future<List<Request>> getAllRequests() async {
+    final res = await supabase
         .from(_table)
         .select()
         .order("created_at", ascending: false);
     return res.map((map) => Request.fromMap(map)).toList();
   }
 
-  Future<Request?> getUserById(int id) async {
-    final res =
-        await _supabase.from(_table).select().eq("id", id).maybeSingle();
+  Future<Request?> getRequestById(int id) async {
+    final res = await supabase.from(_table).select().eq("id", id).maybeSingle();
     return res != null ? Request.fromMap(res) : null; // error if not found
   }
 
-  Future<void> addUser(Request user) async {
-    await _supabase.from(_table).insert(user.toMap());
+  Future<void> addRequest(Request request) async {
+    await supabase.from(_table).insert(request.toMap());
   }
 
-  Future<void> updateUser(Request user) async {
-    await _supabase.from(_table).update(user.toMap()).eq("id", user.id!);
-  }
-
-  Future<void> deleteUser(int id) async {
-    await _supabase.from(_table).delete().eq("id", id);
+  Future<void> updateRequest(Request request) async {
+    await supabase.from(_table).update(request.toMap()).eq("id", request.id!);
   }
 }

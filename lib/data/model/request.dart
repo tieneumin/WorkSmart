@@ -1,44 +1,49 @@
 class Request {
   int? id;
-  final int userId;
+  final String userId;
+  final String title;
   final String body;
-  String status; // e.g. "pending", "approved", "rejected"
-  final String attachment;
+  String status;
+  final String file;
   final DateTime createdAt;
 
   Request({
     this.id,
     required this.userId,
+    required this.title,
     required this.body,
     this.status = "pending",
-    this.attachment = "",
+    this.file = "",
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Request copy({
     int? id,
-    int? userId,
+    String? userId,
+    String? title,
     String? body,
     String? status,
-    String? attachment,
+    String? file,
     DateTime? createdAt,
   }) {
     return Request(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      title: title ?? this.title,
       body: body ?? this.body,
       status: status ?? this.status,
-      attachment: attachment ?? this.attachment,
+      file: file ?? this.file,
       createdAt: createdAt ?? this.createdAt,
     );
   }
 
   Map<String, dynamic> toMap() => {
-    "id": id,
+    if (id != null) "id": id,
     "userId": userId,
+    "title": title,
     "body": body,
     "status": status,
-    "attachment": attachment,
+    "file": file,
     "createdAt": createdAt.toIso8601String(),
   };
 
@@ -46,15 +51,16 @@ class Request {
     return Request(
       id: map["id"],
       userId: map["userId"],
+      title: map["title"],
       body: map["body"],
       status: map["status"],
-      attachment: map["attachment"],
+      file: map["file"],
       createdAt: DateTime.parse(map["createdAt"]),
     );
   }
 
   @override
   String toString() {
-    return "Request{id: $id, userId: $userId, body: $body, status: $status, attachment: $attachment, createdAt: $createdAt}";
+    return "Request{id: $id, userId: $userId, title: $title, body: $body, status: $status, attachment: $file, createdAt: $createdAt}";
   }
 }

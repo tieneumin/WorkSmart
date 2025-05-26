@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/secrets.dart';
+import 'package:provider/provider.dart';
+import 'package:worksmart/provider/user_id_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
 
@@ -10,11 +12,10 @@ void main() async {
   await Supabase.initialize(url: supabaseProjectUrl, anonKey: supabaseAnonKey);
 
   runApp(
-    MyApp(),
-    // ChangeNotifierProvider(
-    //   create: (context) => CounterProvider(),
-    //   child: const MyApp(),
-    // ),
+    ChangeNotifierProvider(
+      create: (_) => UserIdProvider(),
+      child: const MyApp(),
+    ),
   );
 }
 

@@ -12,7 +12,7 @@ class Nav {
       builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
-      path: "/signup",
+      path: "/sign_up",
       name: Screen.signup.name,
       builder: (context, state) => const SignUpScreen(),
     ),
