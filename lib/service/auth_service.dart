@@ -1,10 +1,12 @@
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/data/repo/app_user_supabase.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
 import 'package:worksmart/data/model/app_user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:worksmart/provider/user_provider.dart';
 import 'package:worksmart/secrets.dart';
 
 class AuthService {
@@ -12,16 +14,25 @@ class AuthService {
   AuthService._init();
   factory AuthService() => _instance;
 
-  final _supabase = Supabase.instance.client;
-  final _userRepo = AppUserSupabase();
-  User? get currentUser => _supabase.auth.currentUser;
+  static final _supabase = Supabase.instance.client;
+  static final _userRepo = AppUserSupabase();
+
+  User? get _currentUser => _supabase.auth.currentUser;
+  Future<AppUser?> getCurrentUserById() async =>
+      await _userRepo.getUserById(_currentUser!.id);
 
   void listenForAuthChanges(BuildContext context) {
     _supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedIn) {
-        if (context.mounted) context.pushReplacementNamed(Screen.home.name);
+        if (context.mounted) {
+          context.read<UserProvider>().getCurrentUser();
+          context.pushReplacementNamed(Screen.home.name);
+        }
       } else if (data.event == AuthChangeEvent.signedOut) {
-        if (context.mounted) context.pushReplacementNamed(Screen.login.name);
+        if (context.mounted) {
+          context.read<UserProvider>().clearUser();
+          context.pushReplacementNamed(Screen.login.name);
+        }
       }
     });
   }
@@ -36,8 +47,8 @@ class AuthService {
       password: password,
     );
     if (res.user != null) {
-      final id = currentUser!.id;
-      final user = await _userRepo.getUserById(id);
+      final id = _currentUser!.id;
+      final user = await getCurrentUserById();
       if (user == null) await _userRepo.addUser(AppUser(id: id, email: email));
     }
     return res;
@@ -59,9 +70,9 @@ class AuthService {
       accessToken: accessToken,
     );
     if (res.user != null) {
-      final id = currentUser!.id;
-      final email = currentUser!.email;
-      final user = await _userRepo.getUserById(id);
+      final id = _currentUser!.id;
+      final email = _currentUser!.email;
+      final user = await getCurrentUserById();
       if (user == null) await _userRepo.addUser(AppUser(id: id, email: email!));
     }
     return res;

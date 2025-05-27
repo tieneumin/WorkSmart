@@ -8,11 +8,11 @@ class RequestSupabase {
     return _instance;
   }
 
-  final supabase = Supabase.instance.client;
+  static final _supabase = Supabase.instance.client;
   static const _table = "requests";
 
-  Future<List<Request>> getAllRequests() async {
-    final res = await supabase
+  Future<List<Request>> getRequests() async {
+    final res = await _supabase
         .from(_table)
         .select()
         .order("created_at", ascending: false);
@@ -20,15 +20,16 @@ class RequestSupabase {
   }
 
   Future<Request?> getRequestById(int id) async {
-    final res = await supabase.from(_table).select().eq("id", id).maybeSingle();
+    final res =
+        await _supabase.from(_table).select().eq("id", id).maybeSingle();
     return res != null ? Request.fromMap(res) : null; // error if not found
   }
 
   Future<void> addRequest(Request request) async {
-    await supabase.from(_table).insert(request.toMap());
+    await _supabase.from(_table).insert(request.toMap());
   }
 
   Future<void> updateRequest(Request request) async {
-    await supabase.from(_table).update(request.toMap()).eq("id", request.id!);
+    await _supabase.from(_table).update(request.toMap()).eq("id", request.id!);
   }
 }

@@ -2,10 +2,10 @@ import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:worksmart/data/repo/request_supabase.dart';
-import 'package:worksmart/provider/user_id_provider.dart';
 import 'package:worksmart/service/storage_service.dart';
+import 'package:provider/provider.dart';
+import 'package:worksmart/provider/user_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:worksmart/data/model/request.dart';
 import 'package:go_router/go_router.dart';
@@ -32,8 +32,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
   @override
   void initState() {
+    _userId = context.read<UserProvider>().user!.id;
     super.initState();
-    _userId = context.watch<UserIdProvider>().userId;
   }
 
   void _pickFile() async {
@@ -72,8 +72,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           file: _fileName ?? "",
         ),
       );
-      // if (!mounted) return;
-      // context.pop(true);
+      if (!mounted) return;
+      context.pop(true);
     } on PostgrestException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
     }
@@ -89,7 +89,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Request")),
+      appBar: AppBar(title: const Text("Submit Request")),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -112,6 +112,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 maxLines: 5,
                 decoration: InputDecoration(
                   labelText: "Details",
+                  alignLabelWithHint: true,
                   errorText: _bodyError,
                   border: OutlineInputBorder(),
                 ),

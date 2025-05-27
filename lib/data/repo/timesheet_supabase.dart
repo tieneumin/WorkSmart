@@ -1,0 +1,38 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:worksmart/data/model/timesheet.dart';
+
+class TimesheetSupabase {
+  static final TimesheetSupabase _instance = TimesheetSupabase._init();
+  TimesheetSupabase._init();
+  factory TimesheetSupabase() {
+    return _instance;
+  }
+
+  static final _supabase = Supabase.instance.client;
+  static const _table = "timesheets";
+
+  Future<List<Timesheet>> getTimesheets() async {
+    final res = await _supabase
+        .from(_table)
+        .select()
+        .order("created_at", ascending: false);
+    return res.map((map) => Timesheet.fromMap(map)).toList();
+  }
+
+  Future<Timesheet?> getTimesheetById(int id) async {
+    final res =
+        await _supabase.from(_table).select().eq("id", id).maybeSingle();
+    return res != null ? Timesheet.fromMap(res) : null;
+  }
+
+  Future<void> addTimesheet(Timesheet timesheet) async {
+    await _supabase.from(_table).insert(timesheet.toMap());
+  }
+
+  Future<void> updateTimesheet(Timesheet timesheet) async {
+    await _supabase
+        .from(_table)
+        .update(timesheet.toMap())
+        .eq("id", timesheet.id!);
+  }
+}

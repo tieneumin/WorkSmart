@@ -22,8 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
-    super.initState();
     _authService.listenForAuthChanges(context);
+    super.initState();
   }
 
   Future<void> _signInWithPassword() async {
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _navigateToSignUp() => context.pushNamed(Screen.signup.name);
+  void _navigateToSignUp() => context.pushNamed(Screen.signUp.name);
 
   @override
   void dispose() {

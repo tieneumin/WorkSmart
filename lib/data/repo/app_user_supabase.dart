@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/data/model/app_user.dart';
 
@@ -12,7 +11,7 @@ class AppUserSupabase {
   static final _supabase = Supabase.instance.client;
   static const _table = "app_users";
 
-  Future<List<AppUser>> getAllUsers() async {
+  Future<List<AppUser>> getUsers() async {
     final res = await _supabase
         .from(_table)
         .select()
@@ -23,7 +22,7 @@ class AppUserSupabase {
   Future<AppUser?> getUserById(String id) async {
     final res =
         await _supabase.from(_table).select().eq("id", id).maybeSingle();
-    return res != null ? AppUser.fromMap(res) : null; // error if not found
+    return res != null ? AppUser.fromMap(res) : null;
   }
 
   Future<void> addUser(AppUser user) async {
@@ -31,10 +30,10 @@ class AppUserSupabase {
   }
 
   Future<void> updateUser(AppUser user) async {
-    await _supabase.from(_table).update(user.toMap()).eq("id", user.id!);
+    await _supabase.from(_table).update(user.toMap()).eq("id", user.id);
   }
 
-  Future<void> deleteUser(String id) async {
-    await _supabase.from(_table).delete().eq("id", id);
-  }
+  // Future<void> deleteUser(String id) async {
+  //   await _supabase.from(_table).delete().eq("id", id);
+  // }
 }

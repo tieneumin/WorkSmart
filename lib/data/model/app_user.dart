@@ -42,7 +42,7 @@ class AppUser {
       id: map["id"],
       email: map["email"],
       role: map["role"],
-      salary: map["salary"],
+      salary: (map["salary"] as num).toDouble(),
       createdAt: DateTime.parse(map["created_at"]),
     );
   }

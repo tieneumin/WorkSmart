@@ -24,8 +24,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    super.initState();
     _authService.listenForAuthChanges(context);
+    super.initState();
   }
 
   Future<void> _signUp() async {

@@ -39,28 +39,27 @@ class Request {
 
   Map<String, dynamic> toMap() => {
     if (id != null) "id": id,
-    "userId": userId,
+    "user_id": userId,
     "title": title,
     "body": body,
     "status": status,
     "file": file,
-    "createdAt": createdAt.toIso8601String(),
+    "created_at": createdAt.toIso8601String(),
   };
 
   static Request fromMap(Map<String, dynamic> map) {
     return Request(
       id: map["id"],
-      userId: map["userId"],
+      userId: map["user_id"],
       title: map["title"],
       body: map["body"],
       status: map["status"],
       file: map["file"],
-      createdAt: DateTime.parse(map["createdAt"]),
+      createdAt: DateTime.parse(map["created_at"]),
     );
   }
 
   @override
-  String toString() {
-    return "Request{id: $id, userId: $userId, title: $title, body: $body, status: $status, attachment: $file, createdAt: $createdAt}";
-  }
+  String toString() =>
+      "Request{$id, $userId, $title, $body, $status, $file, $createdAt}";
 }
