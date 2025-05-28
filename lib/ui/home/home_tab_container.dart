@@ -25,15 +25,12 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
     _screens = [
       TimesheetsScreen(),
       RequestsScreen(),
-      // UsersScreen(),
-      // TestEmployeeScreen(),
-      // TestEmployerScreen(),
+      UsersScreen(),
+      TestEmployeeScreen(),
+      TestEmployerScreen(),
       ProfileScreen(),
     ];
     super.initState();
-
-    // // for logout
-    //   context.read<UserIdProvider>().clearUserId();
 
     // _tabs =
     //     getUserById(_).role == "employer"
@@ -50,7 +47,9 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
   Widget _tabBarItem(String title, IconData icon) {
     return SizedBox(
       height: 48.0,
-      child: Column(children: [Icon(icon), Text(title)]),
+      child: Column(
+        children: [Icon(icon), Text(title, overflow: TextOverflow.ellipsis)],
+      ),
     );
   }
 
@@ -68,9 +67,9 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
           tabs: [
             _tabBarItem("Timesheets", Icons.more_time),
             _tabBarItem("Requests", Icons.fact_check),
-            // _tabBarItem("Users", Icons.people),
-            // _tabBarItem("Employee", Icons.work),
-            // _tabBarItem("Employer", Icons.person),
+            _tabBarItem("Users", Icons.people),
+            _tabBarItem("Employee", Icons.work),
+            _tabBarItem("Employer", Icons.person),
             _tabBarItem("Profile", Icons.settings),
           ],
         ),

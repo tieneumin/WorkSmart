@@ -3,7 +3,7 @@ class Timesheet {
   final String userId;
   final DateTime date;
   double hours;
-  final DateTime createdAt;
+  DateTime createdAt;
 
   Timesheet({
     this.id,

@@ -1,12 +1,12 @@
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/data/repo/app_user_supabase.dart';
+import 'package:worksmart/data/model/app_user.dart';
+import 'package:provider/provider.dart';
+import 'package:worksmart/provider/user_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
-import 'package:worksmart/data/model/app_user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:worksmart/provider/user_provider.dart';
 import 'package:worksmart/secrets.dart';
 
 class AuthService {
@@ -39,7 +39,28 @@ class AuthService {
 
   Future<AuthResponse> signUp(String email, String password) async {
     return await _supabase.auth.signUp(email: email, password: password);
+    // final res = await _supabase.auth.signUp(email: email, password: password);
+    // if (res.user != null) {
+    //   final id = res.user!.id;
+    //   await _userRepo.addUser(AppUser(id: id, email: email));
+    // }
+    // return res;
   }
+
+  // Future<void> internalSignUp(
+  //   String email,
+  //   String password,
+  //   String role,
+  //   double salary,
+  // ) async {
+  //   final res = await _supabase.auth.signUp(email: email, password: password);
+  //   if (res.user != null) {
+  //     final id = res.user!.id;
+  //     await _userRepo.addUser(
+  //       AppUser(id: id, email: email, role: role, salary: salary),
+  //     );
+  //   }
+  // }
 
   Future<AuthResponse> signInWithPassword(String email, String password) async {
     final res = await _supabase.auth.signInWithPassword(

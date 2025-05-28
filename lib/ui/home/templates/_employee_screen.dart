@@ -44,7 +44,7 @@ class TestEmployeeScreen extends StatelessWidget {
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'Reason...',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),

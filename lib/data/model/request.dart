@@ -12,7 +12,7 @@ class Request {
     required this.userId,
     required this.title,
     required this.body,
-    this.status = "pending",
+    this.status = "Pending",
     this.file = "",
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();

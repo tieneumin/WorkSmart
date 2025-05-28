@@ -8,7 +8,7 @@ class AppUser {
   AppUser({
     required this.id,
     required this.email,
-    this.role = "employee",
+    this.role = "Employee",
     this.salary = 0.0,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();

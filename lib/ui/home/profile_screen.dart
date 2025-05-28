@@ -17,6 +17,7 @@ class ProfileScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      appBar: AppBar(title: const Text("Profile")),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -28,14 +29,14 @@ class ProfileScreen extends StatelessWidget {
                 "Email: ${user.email}",
                 style: const TextStyle(fontSize: 16.0),
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 16.0),
               Text(
                 "Role: ${user.role}",
                 style: const TextStyle(fontSize: 16.0),
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 16.0),
               Text(
-                "Salary: \$${user.salary.toStringAsFixed(2)}",
+                "Salary: RM${user.salary.toStringAsFixed(2)}",
                 style: const TextStyle(fontSize: 16.0),
               ),
               const SizedBox(height: 16.0),

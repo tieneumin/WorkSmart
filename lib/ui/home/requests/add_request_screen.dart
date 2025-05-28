@@ -26,6 +26,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   final _bodyController = TextEditingController();
   String? _titleError;
   String? _bodyError;
+  bool _isLoading = false;
+
   late final String? _userId;
   String? _fileName;
   Uint8List? _bytes;
@@ -42,9 +44,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       _bytes = await file.readAsBytes();
-      setState(() {
-        _fileName = result.files.single.name;
-      });
+      setState(() => _fileName = result.files.single.name);
     }
   }
 
@@ -54,7 +54,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
     if (title.isEmpty || body.isEmpty) {
       setState(() {
-        if (title.isEmpty) _titleError = "Title is required";
+        if (title.isEmpty) _titleError = "Subject is required";
         if (body.isEmpty) _bodyError = "Details are required";
       });
       return;
@@ -72,8 +72,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           file: _fileName ?? "",
         ),
       );
-      if (!mounted) return;
-      context.pop(true);
+      if (mounted) context.pop(true);
     } on PostgrestException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
     }
@@ -100,9 +99,9 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 controller: _titleController,
                 onChanged: (_) => setState(() => _titleError = null),
                 decoration: InputDecoration(
-                  labelText: "Title",
+                  labelText: "Subject",
                   errorText: _titleError,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -114,26 +113,29 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                   labelText: "Details",
                   alignLabelWithHint: true,
                   errorText: _bodyError,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16.0),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton.icon(
                     onPressed: _pickFile,
                     label: const Text("Attach file"),
                     icon: const Icon(Icons.attach_file),
                   ),
-                  const SizedBox(width: 16.0),
                   if (_fileName != null)
-                    Expanded(
-                      child: Text(_fileName!, overflow: TextOverflow.ellipsis),
-                    ),
+                    Text(_fileName!, overflow: TextOverflow.ellipsis),
                 ],
               ),
-              SizedBox(height: 16.0),
-              FilledButton(onPressed: _submitRequest, child: Text("Submit")),
+              const SizedBox(height: 24.0),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : FilledButton(
+                    onPressed: _submitRequest,
+                    child: const Text("Submit"),
+                  ),
             ],
           ),
         ),

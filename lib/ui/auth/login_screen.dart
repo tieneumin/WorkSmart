@@ -50,6 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await _authService.signInWithGoogle();
     } on AuthException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
+    } on PostgrestException catch (e) {
+      if (mounted) showErrorSnackbar(e.message, context);
     }
   }
 
@@ -79,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: "Email",
                   errorText: _emailError,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -90,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: "Password",
                   errorText: _passwordError,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _hidePassword ? Icons.visibility_off : Icons.visibility,
