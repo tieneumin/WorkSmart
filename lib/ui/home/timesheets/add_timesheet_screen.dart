@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:worksmart/data/model/timesheet.dart';
 import 'package:worksmart/data/repo/timesheet_supabase.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:worksmart/core/utils.dart';
 
 class AddTimesheetScreen extends StatefulWidget {
   const AddTimesheetScreen({super.key});
@@ -19,7 +21,7 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   String? _dateError;
   bool _isLoading = false;
 
-  late final String? _userId;
+  late String _userId;
   DateTime? _selectedDate;
 
   @override
@@ -29,6 +31,7 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   }
 
   Future<void> _pickDate() async {
+    setState(() => _dateError = null);
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -43,29 +46,26 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
     final hoursText = _hoursController.text;
     final date = _selectedDate;
 
-    if (hoursText.isEmpty || date == null) {
+    if (date == null || hoursText.isEmpty) {
       setState(() {
-        if (hoursText.isEmpty) _hoursError = "Field is required";
         if (date == null) _dateError = "Date is required";
+        if (hoursText.isEmpty) _hoursError = "Hours are required";
       });
       return;
     }
     final hours = double.tryParse(hoursText);
-    if (hours == null || hours <= 0) {
+    if (hours == null || hours < 0 || hours > 24) {
       setState(() => _hoursError = "Enter a valid number of hours");
       return;
     }
     setState(() => _isLoading = true);
     try {
-      // final timesheet = Timesheet(date: date, hours: hours);
-      // await _repo.addTimesheet(timesheet);
+      await _repo.addTimesheet(
+        Timesheet(userId: _userId, hours: hours, date: date),
+      );
       if (mounted) context.pop(true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to add timesheet: $e")));
-      }
+    } on PostgrestException catch (e) {
+      if (mounted) showErrorSnackbar(e.message, context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -97,7 +97,7 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
                   ),
                   child: Text(
                     _selectedDate == null
-                        ? "Select date"
+                        ? "Select a date"
                         : _selectedDate!.toIso8601String().split("T")[0],
                   ),
                 ),

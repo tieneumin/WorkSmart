@@ -5,7 +5,6 @@ import 'package:worksmart/data/model/app_user.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:worksmart/nav/nav.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:worksmart/secrets.dart';
 
@@ -18,61 +17,61 @@ class AuthService {
   static final _userRepo = AppUserSupabase();
 
   User? get _currentUser => _supabase.auth.currentUser;
-  Future<AppUser?> getCurrentUserById() async =>
-      await _userRepo.getUserById(_currentUser!.id);
+  Future<AppUser?> getCurrentUserById() async {
+    return await _userRepo.getUserById(_currentUser!.id);
+  }
 
-  void listenForAuthChanges(BuildContext context) {
+  void listenForSignIn(BuildContext context) {
     _supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedIn) {
         if (context.mounted) {
           context.read<UserProvider>().getCurrentUser();
-          context.pushReplacementNamed(Screen.home.name);
+          context.go("/");
         }
-      } else if (data.event == AuthChangeEvent.signedOut) {
+      }
+    });
+  }
+
+  void listenForSignOut(BuildContext context) {
+    _supabase.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedOut) {
         if (context.mounted) {
           context.read<UserProvider>().clearUser();
-          context.pushReplacementNamed(Screen.login.name);
+          context.go("/login");
         }
       }
     });
   }
 
   Future<AuthResponse> signUp(String email, String password) async {
-    return await _supabase.auth.signUp(email: email, password: password);
-    // final res = await _supabase.auth.signUp(email: email, password: password);
-    // if (res.user != null) {
-    //   final id = res.user!.id;
-    //   await _userRepo.addUser(AppUser(id: id, email: email));
-    // }
-    // return res;
+    final res = await _supabase.auth.signUp(email: email, password: password);
+    if (res.user != null) {
+      final id = res.user!.id;
+      await _userRepo.addUser(AppUser(id: id, email: email));
+    }
+    return res;
   }
 
-  // Future<void> internalSignUp(
-  //   String email,
-  //   String password,
-  //   String role,
-  //   double salary,
-  // ) async {
-  //   final res = await _supabase.auth.signUp(email: email, password: password);
-  //   if (res.user != null) {
-  //     final id = res.user!.id;
-  //     await _userRepo.addUser(
-  //       AppUser(id: id, email: email, role: role, salary: salary),
-  //     );
-  //   }
-  // }
+  Future<void> internalSignUp(
+    String email,
+    String password,
+    String role,
+    double salary,
+  ) async {
+    final res = await _supabase.auth.signUp(email: email, password: password);
+    if (res.user != null) {
+      final id = res.user!.id;
+      await _userRepo.addUser(
+        AppUser(id: id, email: email, role: role, salary: salary),
+      );
+    }
+  }
 
   Future<AuthResponse> signInWithPassword(String email, String password) async {
-    final res = await _supabase.auth.signInWithPassword(
+    return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
-    if (res.user != null) {
-      final id = _currentUser!.id;
-      final user = await getCurrentUserById();
-      if (user == null) await _userRepo.addUser(AppUser(id: id, email: email));
-    }
-    return res;
   }
 
   Future<AuthResponse> signInWithGoogle() async {

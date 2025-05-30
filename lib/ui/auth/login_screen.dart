@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
-    _authService.listenForAuthChanges(context);
+    _authService.listenForSignIn(context);
     super.initState();
   }
 

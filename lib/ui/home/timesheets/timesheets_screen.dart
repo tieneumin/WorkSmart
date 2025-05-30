@@ -73,7 +73,9 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
                   itemBuilder:
                       (context, index) => TimesheetItem(
                         timesheet: _timesheets[index],
-                        // onClickItem: (timesheet) => _navigateToDetails(timesheet.id!),
+                        onClickItem:
+                            (timesheet) =>
+                                _navigateToEditTimesheet(timesheet.id!),
                       ),
                 ),
         //   ],
@@ -91,28 +93,28 @@ class TimesheetItem extends StatelessWidget {
   const TimesheetItem({
     super.key,
     required this.timesheet,
-    // required this.onClickItem,
+    required this.onClickItem,
   });
   final Timesheet timesheet;
-  // final Function(Timesheet) onClickItem;
+  final Function(Timesheet) onClickItem;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(8.0),
-      // child: GestureDetector(
-      //   onTap: () => onClickItem(timesheet),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            timesheet.date.toIso8601String().split("T")[0],
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          Text("${timesheet.hours.toString()} hours"),
-        ],
+      child: GestureDetector(
+        onTap: () => onClickItem(timesheet),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              timesheet.date.toIso8601String().split("T")[0],
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text("${timesheet.hours.toString()} hours"),
+          ],
+        ),
       ),
-      // ),
     );
   }
 }

@@ -28,7 +28,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   String? _bodyError;
   bool _isLoading = false;
 
-  late final String? _userId;
+  late String _userId;
   String? _fileName;
   Uint8List? _bytes;
 
@@ -66,7 +66,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       }
       await _repo.addRequest(
         Request(
-          userId: _userId!,
+          userId: _userId,
           title: title,
           body: body,
           file: _fileName ?? "",
@@ -75,6 +75,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       if (mounted) context.pop(true);
     } on PostgrestException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -110,8 +112,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 onChanged: (_) => setState(() => _bodyError = null),
                 maxLines: 5,
                 decoration: InputDecoration(
-                  labelText: "Details",
                   alignLabelWithHint: true,
+                  labelText: "Details",
                   errorText: _bodyError,
                   border: const OutlineInputBorder(),
                 ),

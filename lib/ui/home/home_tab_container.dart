@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:worksmart/service/auth_service.dart';
 import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 import 'package:worksmart/ui/home/requests/requests_screen.dart';
 import 'package:worksmart/ui/home/users/users_screen.dart';
@@ -15,13 +14,11 @@ class HomeTabContainer extends StatefulWidget {
 }
 
 class _HomeTabContainerState extends State<HomeTabContainer> {
-  final _authService = AuthService();
   late final List<Widget> _screens;
   // late final List<Widget> _tabs;
 
   @override
   void initState() {
-    _authService.listenForAuthChanges(context);
     _screens = [
       TimesheetsScreen(),
       RequestsScreen(),

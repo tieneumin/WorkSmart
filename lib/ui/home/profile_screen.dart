@@ -3,18 +3,27 @@ import 'package:worksmart/service/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   static final _authService = AuthService();
 
   @override
-  Widget build(BuildContext context) {
-    final user = context.read<UserProvider>().user;
+  void initState() {
+    _authService.listenForSignOut(context);
+    super.initState();
+  }
 
-    if (user == null) {
-      return const Center(child: Text("No user data"));
-    }
+  @override
+  Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>().user;
+
+    if (user == null) return const Center(child: Text("No user data"));
 
     return Scaffold(
       appBar: AppBar(title: const Text("Profile")),

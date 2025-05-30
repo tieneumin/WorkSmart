@@ -59,9 +59,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 : ListView.builder(
                   itemCount: _requests.length,
                   itemBuilder:
-                      (context, index) =>
-                          RequestItem(request: _requests[index]),
-                  // onClickItem: (request) => _navigateToRequestDetails(request.id!),
+                      (context, index) => RequestItem(
+                        request: _requests[index],
+                        onClickItem:
+                            (request) => _navigateToRequestDetails(request.id!),
+                      ),
                 ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -76,28 +78,28 @@ class RequestItem extends StatelessWidget {
   const RequestItem({
     super.key,
     required this.request,
-    // required this.onClickItem,
+    required this.onClickItem,
   });
   final Request request;
-  // final Function(Request) onClickItem;
+  final Function(Request) onClickItem;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(8.0),
-      // child: GestureDetector(
-      //   onTap: () => onClickItem(request),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(request.title, style: Theme.of(context).textTheme.titleMedium),
-          Text(
-            "Status: ${request.status}",
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+      child: GestureDetector(
+        onTap: () => onClickItem(request),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(request.title, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              "Status: ${request.status}",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
       ),
-      // ),
     );
   }
 }

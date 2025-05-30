@@ -32,18 +32,18 @@ class _AddUserScreenState extends State<AddUserScreen> {
     final email = _emailController.text;
     final password = _passwordController.text;
     final confirmPass = _confirmPassController.text;
-    final salary = _salaryController.text;
+    final salaryText = _salaryController.text;
 
     if (email.isEmpty ||
         password.isEmpty ||
         confirmPass.isEmpty ||
-        salary.isEmpty ||
+        salaryText.isEmpty ||
         _role.isEmpty) {
       setState(() {
         if (email.isEmpty) _emailError = "Email is required";
         if (password.isEmpty) _passwordError = "Password is required";
         if (confirmPass.isEmpty) _confirmPassError = "Confirm passwords match";
-        if (salary.isEmpty) _salaryError = "Salary is required";
+        if (salaryText.isEmpty) _salaryError = "Salary is required";
         if (_role.isEmpty) _roleError = "Role is required";
       });
       return;
@@ -52,15 +52,20 @@ class _AddUserScreenState extends State<AddUserScreen> {
       showErrorSnackbar("Passwords do not match", context);
       return;
     }
+    final salary = double.tryParse(salaryText);
+    if (salary == null || salary < 0) {
+      setState(() => _salaryError = "Enter a valid salary");
+      return;
+    }
     try {
-      final res = await _authService.signUp(email, password);
-      // parse salary to double
-      // create app user, saving role/salary
-      if (res.user != null && mounted) context.pop(true);
+      await _authService.internalSignUp(email, password, _role, salary);
+      if (mounted) context.pop(true);
     } on AuthException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
     } on PostgrestException catch (e) {
       if (mounted) showErrorSnackbar(e.message, context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -78,96 +83,108 @@ class _AddUserScreenState extends State<AddUserScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Create User")),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _emailController,
-                onChanged: (_) => setState(() => _emailError = null),
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  errorText: _emailError,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _passwordController,
-                onChanged: (_) => setState(() => _passwordError = null),
-                obscureText: _hidePassword,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  errorText: _passwordError,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hidePassword ? Icons.visibility_off : Icons.visibility,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _emailController,
+                    onChanged: (_) => setState(() => _emailError = null),
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      errorText: _emailError,
+                      border: const OutlineInputBorder(),
                     ),
-                    onPressed:
-                        () => setState(() => _hidePassword = !_hidePassword),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _confirmPassController,
-                onChanged: (_) => setState(() => _confirmPassError = null),
-                obscureText: _hideConfirmPass,
-                decoration: InputDecoration(
-                  labelText: "Confirm password",
-                  errorText: _confirmPassError,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hideConfirmPass
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed:
-                        () => setState(
-                          () => _hideConfirmPass = !_hideConfirmPass,
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: _passwordController,
+                    onChanged: (_) => setState(() => _passwordError = null),
+                    obscureText: _hidePassword,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      errorText: _passwordError,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _hidePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
+                        onPressed:
+                            () =>
+                                setState(() => _hidePassword = !_hidePassword),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _salaryController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                onChanged: (_) => setState(() => _salaryError = null),
-                decoration: InputDecoration(
-                  labelText: "Salary",
-                  errorText: _salaryError,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              DropdownButtonFormField<String>(
-                value: _role,
-                items: const [
-                  DropdownMenuItem(value: "", child: Text("Select an option")),
-                  DropdownMenuItem(value: "employee", child: Text("Employee")),
-                  DropdownMenuItem(value: "HR", child: Text("HR")),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: _confirmPassController,
+                    onChanged: (_) => setState(() => _confirmPassError = null),
+                    obscureText: _hideConfirmPass,
+                    decoration: InputDecoration(
+                      labelText: "Confirm password",
+                      errorText: _confirmPassError,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _hideConfirmPass
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed:
+                            () => setState(
+                              () => _hideConfirmPass = !_hideConfirmPass,
+                            ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: _salaryController,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => setState(() => _salaryError = null),
+                    decoration: InputDecoration(
+                      labelText: "Salary",
+                      errorText: _salaryError,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  DropdownButtonFormField<String>(
+                    value: _role,
+                    items: const [
+                      DropdownMenuItem(value: "", child: Text("Select a role")),
+                      DropdownMenuItem(
+                        value: "Employee",
+                        child: Text("Employee"),
+                      ),
+                      DropdownMenuItem(value: "HR", child: Text("HR")),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setState(() => _role = value);
+                      if (value != "") setState(() => _roleError = null);
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Role",
+                      errorText: _roleError,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24.0),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : FilledButton(
+                        onPressed: _createUser,
+                        child: const Text("Create"),
+                      ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _role = value);
-                },
-                decoration: InputDecoration(
-                  labelText: "Role",
-                  errorText: _roleError,
-                  border: const OutlineInputBorder(),
-                ),
               ),
-              const SizedBox(height: 24.0),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : FilledButton(
-                    onPressed: _createUser,
-                    child: const Text("Create"),
-                  ),
-            ],
+            ),
           ),
         ),
       ),

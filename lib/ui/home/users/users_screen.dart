@@ -61,7 +61,7 @@ class _UsersScreenState extends State<UsersScreen> {
                   itemBuilder:
                       (context, index) => UserItem(
                         user: _users[index],
-                        // onClickItem: (user) => _navigateToEditUser(user.id),
+                        onClickItem: (user) => _navigateToEditUser(user.id),
                       ),
                 ),
       ),
@@ -74,34 +74,30 @@ class _UsersScreenState extends State<UsersScreen> {
 }
 
 class UserItem extends StatelessWidget {
-  const UserItem({
-    super.key,
-    required this.user,
-    // required this.onClickItem
-  });
+  const UserItem({super.key, required this.user, required this.onClickItem});
   final AppUser user;
-  // final Function(AppUser) onClickItem;
+  final Function(AppUser) onClickItem;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(8.0),
-      // child: GestureDetector(
-      // onTap: () => onClickItem(user),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "${user.email} (${user.role})",
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          Text(
-            "Salary: RM${user.salary.toStringAsFixed(2)}",
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+      child: GestureDetector(
+        onTap: () => onClickItem(user),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "${user.email} (${user.role})",
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              "Salary: RM${user.salary.toStringAsFixed(2)}",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
       ),
-      // ),
     );
   }
 }

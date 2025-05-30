@@ -24,7 +24,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    _authService.listenForAuthChanges(context);
+    _authService.listenForSignIn(context);
     super.initState();
   }
 
@@ -37,7 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         if (email.isEmpty) _emailError = "Email is required";
         if (password.isEmpty) _passwordError = "Password is required";
-        if (confirmPass.isEmpty) _confirmPassError = "Confirm your password";
+        if (confirmPass.isEmpty) _confirmPassError = "Confirm passwords match";
       });
       return;
     }
