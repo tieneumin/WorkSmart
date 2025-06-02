@@ -11,7 +11,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static final _authService = AuthService();
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -28,35 +28,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Profile")),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Email: ${user.email}",
-                style: const TextStyle(fontSize: 16.0),
+        child: Center(
+          child: Card(
+            elevation: 4.0,
+            margin: const EdgeInsets.all(24.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.account_circle, size: 64.0),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    "Email: ${user.email}",
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    "Salary: RM${user.salary.toStringAsFixed(2)}",
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    "Role: ${user.role}",
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  const SizedBox(height: 24.0),
+                  FilledButton.icon(
+                    onPressed: _authService.signOut,
+                    label: const Text("Log Out"),
+                    icon: const Icon(Icons.logout),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48.0),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16.0),
-              Text(
-                "Role: ${user.role}",
-                style: const TextStyle(fontSize: 16.0),
-              ),
-              const SizedBox(height: 16.0),
-              Text(
-                "Salary: RM${user.salary.toStringAsFixed(2)}",
-                style: const TextStyle(fontSize: 16.0),
-              ),
-              const SizedBox(height: 16.0),
-              Center(
-                child: FilledButton.icon(
-                  onPressed: _authService.signOut,
-                  label: const Text("Log Out"),
-                  icon: const Icon(Icons.logout),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

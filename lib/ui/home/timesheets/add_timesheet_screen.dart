@@ -21,7 +21,7 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   String? _dateError;
   bool _isLoading = false;
 
-  late String _userId;
+  String? _userId;
   DateTime? _selectedDate;
 
   @override
@@ -53,19 +53,21 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
       });
       return;
     }
+
     final hours = double.tryParse(hoursText);
     if (hours == null || hours < 0 || hours > 24) {
       setState(() => _hoursError = "Enter a valid number of hours");
       return;
     }
+
     setState(() => _isLoading = true);
     try {
       await _repo.addTimesheet(
-        Timesheet(userId: _userId, hours: hours, date: date),
+        Timesheet(userId: _userId!, hours: hours, date: date),
       );
       if (mounted) context.pop(true);
     } on PostgrestException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -82,45 +84,50 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Add Timesheet")),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: "Date",
-                    errorText: _dateError,
-                    border: const OutlineInputBorder(),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  InkWell(
+                    onTap: _pickDate,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: "Date",
+                        errorText: _dateError,
+                        border: const OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        _selectedDate == null
+                            ? "Select a date"
+                            : _selectedDate!.toIso8601String().split("T")[0],
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    _selectedDate == null
-                        ? "Select a date"
-                        : _selectedDate!.toIso8601String().split("T")[0],
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: _hoursController,
+                    onChanged: (_) => setState(() => _hoursError = null),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: "Hours",
+                      errorText: _hoursError,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24.0),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : FilledButton(
+                        onPressed: _addTimesheet,
+                        child: const Text("Add"),
+                      ),
+                ],
               ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _hoursController,
-                onChanged: (_) => setState(() => _hoursError = null),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: "Hours",
-                  errorText: _hoursError,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24.0),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : FilledButton(
-                    onPressed: _addTimesheet,
-                    child: const Text("Add"),
-                  ),
-            ],
+            ),
           ),
         ),
       ),

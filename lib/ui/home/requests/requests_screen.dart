@@ -11,19 +11,18 @@ class RequestsScreen extends StatefulWidget {
   State<RequestsScreen> createState() => _RequestsScreenState();
 }
 
-// filter by user if employee; no filter for HR
 class _RequestsScreenState extends State<RequestsScreen> {
-  static final _repo = RequestSupabase();
+  final _repo = RequestSupabase();
   var _requests = <Request>[];
-  late bool _isLoading;
+  bool _isLoading = true;
 
   @override
   void initState() {
-    _refresh();
     super.initState();
+    _refresh();
   }
 
-  void _refresh() async {
+  Future<void> _refresh() async {
     setState(() => _isLoading = true);
     final res = await _repo.getRequests();
     if (!mounted) return;
@@ -33,12 +32,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
     });
   }
 
-  void _navigateToAddRequest() async {
+  Future<void> _navigateToAddRequest() async {
     var res = await context.pushNamed(Screen.addRequest.name);
     if (res == true) _refresh();
   }
 
-  void _navigateToRequestDetails(int id) async {
+  Future<void> _navigateToRequestDetails(int id) async {
     var res = await context.pushNamed(
       Screen.requestDetails.name,
       pathParameters: {"id": id.toString()},
@@ -56,19 +55,27 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _requests.isEmpty
                 ? const Center(child: Text("No requests submitted"))
-                : ListView.builder(
-                  itemCount: _requests.length,
-                  itemBuilder:
-                      (context, index) => RequestItem(
-                        request: _requests[index],
-                        onClickItem:
-                            (request) => _navigateToRequestDetails(request.id!),
-                      ),
+                : RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _requests.length,
+                    separatorBuilder:
+                        (context, index) => const SizedBox(height: 4.0),
+                    itemBuilder:
+                        (context, index) => RequestItem(
+                          request: _requests[index],
+                          onClickItem:
+                              (request) =>
+                                  _navigateToRequestDetails(request.id!),
+                        ),
+                  ),
                 ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddRequest,
-        child: Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text("Submit Request"),
       ),
     );
   }
@@ -85,19 +92,31 @@ class RequestItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: GestureDetector(
+    return Card(
+      elevation: 2.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      child: InkWell(
         onTap: () => onClickItem(request),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(request.title, style: Theme.of(context).textTheme.titleMedium),
-            Text(
-              "Status: ${request.status}",
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "${request.status} — ${request.title}",
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                "By: ${request.email}",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              SizedBox(height: 4.0),
+              Text(
+                "Submitted: ${request.createdAt.toString().split(".")[0]}",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );

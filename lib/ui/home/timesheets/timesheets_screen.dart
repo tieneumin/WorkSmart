@@ -3,7 +3,7 @@ import 'package:worksmart/data/repo/timesheet_supabase.dart';
 import 'package:worksmart/data/model/timesheet.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
-import 'package:worksmart/widgets/timesheet_chart.dart';
+import 'package:worksmart/widgets/_timesheet_chart.dart';
 
 class TimesheetsScreen extends StatefulWidget {
   const TimesheetsScreen({super.key});
@@ -12,19 +12,18 @@ class TimesheetsScreen extends StatefulWidget {
   State<TimesheetsScreen> createState() => _TimesheetsScreenState();
 }
 
-// filter by user if employee; if HR clicks, filter by said user_id
 class _TimesheetsScreenState extends State<TimesheetsScreen> {
-  static final _repo = TimesheetSupabase();
+  final _repo = TimesheetSupabase();
   var _timesheets = <Timesheet>[];
-  late bool _isLoading;
+  bool _isLoading = true;
 
   @override
   void initState() {
-    _refresh();
     super.initState();
+    _refresh();
   }
 
-  void _refresh() async {
+  Future<void> _refresh() async {
     setState(() => _isLoading = true);
     final res = await _repo.getTimesheets();
     if (!mounted) return;
@@ -34,12 +33,12 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
     });
   }
 
-  void _navigateToAddTimesheet() async {
+  Future<void> _navigateToAddTimesheet() async {
     var res = await context.pushNamed(Screen.addTimesheet.name);
     if (res == true) _refresh();
   }
 
-  void _navigateToEditTimesheet(int id) async {
+  Future<void> _navigateToEditTimesheet(int id) async {
     var res = await context.pushNamed(
       Screen.editTimesheet.name,
       pathParameters: {"id": id.toString()},
@@ -57,33 +56,27 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _timesheets.isEmpty
                 ? const Center(child: Text("No timesheets added"))
-                :
-                // child: Column(
-                //   children: [
-                // TimesheetChart(
-                //   dates: [
-                //     DateTime(2025, 5, 20),
-                //     DateTime(2025, 5, 21),
-                //     DateTime(2025, 5, 22),
-                //   ],
-                //   hours: [6.0, 7.5, 8.0],
-                // ),
-                ListView.builder(
-                  itemCount: _timesheets.length,
-                  itemBuilder:
-                      (context, index) => TimesheetItem(
-                        timesheet: _timesheets[index],
-                        onClickItem:
-                            (timesheet) =>
-                                _navigateToEditTimesheet(timesheet.id!),
-                      ),
+                : RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _timesheets.length,
+                    separatorBuilder:
+                        (context, index) => const SizedBox(height: 4.0),
+                    itemBuilder:
+                        (context, index) => TimesheetItem(
+                          timesheet: _timesheets[index],
+                          onClickItem:
+                              (timesheet) =>
+                                  _navigateToEditTimesheet(timesheet.id!),
+                        ),
+                  ),
                 ),
-        //   ],
-        // ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddTimesheet,
-        child: Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text("Add Timesheet"),
       ),
     );
   }
@@ -100,19 +93,31 @@ class TimesheetItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: GestureDetector(
+    return Card(
+      elevation: 2.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      child: InkWell(
         onTap: () => onClickItem(timesheet),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              timesheet.date.toIso8601String().split("T")[0],
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text("${timesheet.hours.toString()} hours"),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                timesheet.date.toIso8601String().split("T")[0],
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                "Hours worked: ${timesheet.hours.toString()}",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              SizedBox(height: 4.0),
+              Text(
+                "Added: ${timesheet.createdAt.toString().split(".")[0]}",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );

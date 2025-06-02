@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 import 'package:worksmart/ui/home/requests/requests_screen.dart';
 import 'package:worksmart/ui/home/users/users_screen.dart';
-import 'package:worksmart/ui/home/templates/_employee_screen.dart';
-import 'package:worksmart/ui/home/templates/_employer_screen.dart';
 import 'package:worksmart/ui/home/profile_screen.dart';
 
 class HomeTabContainer extends StatefulWidget {
@@ -23,8 +21,6 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
       TimesheetsScreen(),
       RequestsScreen(),
       UsersScreen(),
-      TestEmployeeScreen(),
-      TestEmployerScreen(),
       ProfileScreen(),
     ];
     super.initState();
@@ -65,9 +61,7 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
             _tabBarItem("Timesheets", Icons.more_time),
             _tabBarItem("Requests", Icons.fact_check),
             _tabBarItem("Users", Icons.people),
-            _tabBarItem("Employee", Icons.work),
-            _tabBarItem("Employer", Icons.person),
-            _tabBarItem("Profile", Icons.settings),
+            _tabBarItem("Profile", Icons.person),
           ],
         ),
       ),

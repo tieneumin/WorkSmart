@@ -28,7 +28,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   String? _bodyError;
   bool _isLoading = false;
 
-  late String _userId;
+  String? _userId;
   String? _fileName;
   Uint8List? _bytes;
 
@@ -60,21 +60,17 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       return;
     }
 
+    setState(() => _isLoading = true);
     try {
       if (_fileName != null && _bytes != null) {
         await _storageService.uploadFile(_fileName!, _bytes!);
       }
       await _repo.addRequest(
-        Request(
-          userId: _userId,
-          title: title,
-          body: body,
-          file: _fileName ?? "",
-        ),
+        Request(userId: _userId!, title: title, body: body, file: _fileName),
       );
       if (mounted) context.pop(true);
     } on PostgrestException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -92,53 +88,60 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Submit Request")),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _titleController,
-                onChanged: (_) => setState(() => _titleError = null),
-                decoration: InputDecoration(
-                  labelText: "Subject",
-                  errorText: _titleError,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _bodyController,
-                onChanged: (_) => setState(() => _bodyError = null),
-                maxLines: 5,
-                decoration: InputDecoration(
-                  alignLabelWithHint: true,
-                  labelText: "Details",
-                  errorText: _bodyError,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _pickFile,
-                    label: const Text("Attach file"),
-                    icon: const Icon(Icons.attach_file),
+                  TextField(
+                    controller: _titleController,
+                    onChanged: (_) => setState(() => _titleError = null),
+                    decoration: InputDecoration(
+                      labelText: "Subject",
+                      errorText: _titleError,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                  if (_fileName != null)
-                    Text(_fileName!, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: _bodyController,
+                    onChanged: (_) => setState(() => _bodyError = null),
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      alignLabelWithHint: true,
+                      labelText: "Details",
+                      errorText: _bodyError,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _pickFile,
+                        label: const Text("Attach file"),
+                        icon: const Icon(Icons.attach_file),
+                      ),
+                      if (_fileName != null)
+                        Text(
+                          _fileName!,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 24.0),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : FilledButton(
+                        onPressed: _submitRequest,
+                        child: const Text("Submit"),
+                      ),
                 ],
               ),
-              const SizedBox(height: 24.0),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : FilledButton(
-                    onPressed: _submitRequest,
-                    child: const Text("Submit"),
-                  ),
-            ],
+            ),
           ),
         ),
       ),

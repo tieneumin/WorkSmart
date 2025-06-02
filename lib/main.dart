@@ -7,8 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // required before any platform-specific/async initialization in main()
-
+  WidgetsFlutterBinding.ensureInitialized(); // required before any async init in main()
   await Supabase.initialize(url: supabaseProjectUrl, anonKey: supabaseAnonKey);
 
   runApp(

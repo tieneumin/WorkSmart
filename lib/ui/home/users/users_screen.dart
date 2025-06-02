@@ -11,19 +11,18 @@ class UsersScreen extends StatefulWidget {
   State<UsersScreen> createState() => _UsersScreenState();
 }
 
-// only HR sees
 class _UsersScreenState extends State<UsersScreen> {
-  static final _repo = AppUserSupabase();
+  final _repo = AppUserSupabase();
   var _users = <AppUser>[];
-  late bool _isLoading;
+  bool _isLoading = true;
 
   @override
   void initState() {
-    _refresh();
     super.initState();
+    _refresh();
   }
 
-  void _refresh() async {
+  Future<void> _refresh() async {
     setState(() => _isLoading = true);
     final res = await _repo.getUsers();
     if (!mounted) return;
@@ -33,12 +32,12 @@ class _UsersScreenState extends State<UsersScreen> {
     });
   }
 
-  void _navigateToAddUser() async {
+  Future<void> _navigateToAddUser() async {
     var res = await context.pushNamed(Screen.addUser.name);
     if (res == true) _refresh();
   }
 
-  void _navigateToEditUser(String id) async {
+  Future<void> _navigateToEditUser(String id) async {
     var res = await context.pushNamed(
       Screen.editUser.name,
       pathParameters: {"id": id},
@@ -56,18 +55,25 @@ class _UsersScreenState extends State<UsersScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _users.isEmpty
                 ? const Center(child: Text("No users found"))
-                : ListView.builder(
-                  itemCount: _users.length,
-                  itemBuilder:
-                      (context, index) => UserItem(
-                        user: _users[index],
-                        onClickItem: (user) => _navigateToEditUser(user.id),
-                      ),
+                : RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _users.length,
+                    separatorBuilder:
+                        (context, index) => const SizedBox(height: 4.0),
+                    itemBuilder:
+                        (context, index) => UserItem(
+                          user: _users[index],
+                          onClickItem: (user) => _navigateToEditUser(user.id),
+                        ),
+                  ),
                 ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddUser,
-        child: Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text("Create User"),
       ),
     );
   }
@@ -80,22 +86,31 @@ class UserItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: GestureDetector(
+    return Card(
+      elevation: 2.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      child: InkWell(
         onTap: () => onClickItem(user),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "${user.email} (${user.role})",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              "Salary: RM${user.salary.toStringAsFixed(2)}",
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "${user.email} (${user.role})",
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                "Salary: RM${user.salary.toStringAsFixed(2)}",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              SizedBox(height: 4.0),
+              Text(
+                "Created: ${user.createdAt.toString().split(".")[0]}",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );

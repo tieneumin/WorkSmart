@@ -1,11 +1,13 @@
 class Request {
-  int? id;
+  final int? id;
   final String userId;
   final String title;
   final String body;
-  String status;
-  final String file;
+  final String status;
+  final String? file; // '.' empty string check not working
   final DateTime createdAt;
+
+  final String? email; // to reference app_users' email
 
   Request({
     this.id,
@@ -13,8 +15,10 @@ class Request {
     required this.title,
     required this.body,
     this.status = "Pending",
-    this.file = "",
+    this.file,
     DateTime? createdAt,
+
+    this.email,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Request copy({
@@ -25,6 +29,8 @@ class Request {
     String? status,
     String? file,
     DateTime? createdAt,
+
+    String? email,
   }) {
     return Request(
       id: id ?? this.id,
@@ -34,6 +40,8 @@ class Request {
       status: status ?? this.status,
       file: file ?? this.file,
       createdAt: createdAt ?? this.createdAt,
+
+      email: email ?? this.email,
     );
   }
 
@@ -56,6 +64,8 @@ class Request {
       status: map["status"],
       file: map["file"],
       createdAt: DateTime.parse(map["created_at"]),
+
+      email: map["app_users"]?['email'],
     );
   }
 

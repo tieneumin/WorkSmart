@@ -4,9 +4,7 @@ import 'package:worksmart/data/model/app_user.dart';
 class AppUserSupabase {
   static final AppUserSupabase _instance = AppUserSupabase._init();
   AppUserSupabase._init();
-  factory AppUserSupabase() {
-    return _instance;
-  }
+  factory AppUserSupabase() => _instance;
 
   static final _supabase = Supabase.instance.client;
   static const _table = "app_users";
@@ -32,8 +30,4 @@ class AppUserSupabase {
   Future<void> updateUser(AppUser user) async {
     await _supabase.from(_table).update(user.toMap()).eq("id", user.id);
   }
-
-  // Future<void> deleteUser(String id) async {
-  //   await _supabase.from(_table).delete().eq("id", id);
-  // }
 }

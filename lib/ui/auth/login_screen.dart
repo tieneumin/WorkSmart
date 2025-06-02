@@ -41,7 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.signInWithPassword(email, password);
     } on AuthException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
+    } on PostgrestException catch (e) {
+      if (mounted) showSnackbar(e.message, context);
     }
   }
 
@@ -49,9 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.signInWithGoogle();
     } on AuthException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     }
   }
 
@@ -68,60 +70,83 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset("assets/logo.png"),
-              const SizedBox(height: 8.0),
-              TextField(
-                controller: _emailController,
-                onChanged: (_) => setState(() => _emailError = null),
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  errorText: _emailError,
-                  border: const OutlineInputBorder(),
-                ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 4.0,
+              margin: const EdgeInsets.all(24.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: _passwordController,
-                onChanged: (_) => setState(() => _passwordError = null),
-                obscureText: _hidePassword,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  errorText: _passwordError,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _hidePassword ? Icons.visibility_off : Icons.visibility,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset("assets/logo.png"),
+                    const SizedBox(height: 24.0),
+                    TextField(
+                      controller: _emailController,
+                      autofocus: true,
+                      onChanged: (_) => setState(() => _emailError = null),
+                      decoration: InputDecoration(
+                        labelText: "Email",
+                        errorText: _emailError,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                    onPressed:
-                        () => setState(() => _hidePassword = !_hidePassword),
-                  ),
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      controller: _passwordController,
+                      onChanged: (_) => setState(() => _passwordError = null),
+                      obscureText: _hidePassword,
+                      decoration: InputDecoration(
+                        labelText: "Password",
+                        errorText: _passwordError,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed:
+                              () => setState(
+                                () => _hidePassword = !_hidePassword,
+                              ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24.0),
+                    FilledButton(
+                      onPressed: _signInWithPassword,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48.0),
+                      ),
+                      child: const Text("Log In"),
+                    ),
+                    const SizedBox(height: 16.0),
+                    FilledButton.icon(
+                      onPressed: _signInWithGoogle,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48.0),
+                      ),
+                      label: const Text("Log in with Google"),
+                      icon: Image.asset(
+                        "assets/google.png",
+                        width: 24.0,
+                        height: 24.0,
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    TextButton(
+                      onPressed: _navigateToSignUp,
+                      child: const Text("Don't have an account? Sign up"),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16.0),
-              FilledButton(
-                onPressed: _signInWithPassword,
-                child: const Text("Log In"),
-              ),
-              const SizedBox(height: 8.0),
-              FilledButton.icon(
-                onPressed: _signInWithGoogle,
-                label: const Text("Log in with Google"),
-                icon: Image.asset(
-                  "assets/google.png",
-                  width: 24.0,
-                  height: 24.0,
-                ),
-              ),
-              TextButton(
-                onPressed: _navigateToSignUp,
-                child: const Text("Don't have an account? Sign up"),
-              ),
-            ],
+            ),
           ),
         ),
       ),

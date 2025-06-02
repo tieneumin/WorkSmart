@@ -4,9 +4,7 @@ import 'package:worksmart/data/model/timesheet.dart';
 class TimesheetSupabase {
   static final TimesheetSupabase _instance = TimesheetSupabase._init();
   TimesheetSupabase._init();
-  factory TimesheetSupabase() {
-    return _instance;
-  }
+  factory TimesheetSupabase() => _instance;
 
   static final _supabase = Supabase.instance.client;
   static const _table = "timesheets";
@@ -35,4 +33,8 @@ class TimesheetSupabase {
         .update(timesheet.toMap())
         .eq("id", timesheet.id!);
   }
+
+  // Future<void> deleteTimesheet(int id) async {
+  //   await _supabase.from(_table).delete().eq("id", id);
+  // }
 }

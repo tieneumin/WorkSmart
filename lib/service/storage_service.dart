@@ -5,9 +5,7 @@ import 'package:http/http.dart' as http;
 class StorageService {
   static final StorageService _instance = StorageService._init();
   StorageService._init();
-  factory StorageService() {
-    return _instance;
-  }
+  factory StorageService() => _instance;
 
   static final _supabase = Supabase.instance.client;
 
@@ -17,12 +15,15 @@ class StorageService {
         .uploadBinary(name, bytes, fileOptions: FileOptions(upsert: true));
   }
 
-  Future<Uint8List?> getFile(String name) async {
-    final url = _supabase.storage.from("files").getPublicUrl(name);
+  String getFileUrl(String name) {
+    return _supabase.storage.from("files").getPublicUrl(name);
+  }
+
+  // returns PDF resource as bytes for showing
+  Future<Uint8List?> getParsedFile(String name) async {
+    final url = getFileUrl(name);
     final res = await http.get(Uri.parse(url));
-    if (res.statusCode != 200) {
-      return null;
-    }
+    if (res.statusCode != 200) return null;
     return res.bodyBytes;
   }
 }

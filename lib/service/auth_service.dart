@@ -16,9 +16,10 @@ class AuthService {
   static final _supabase = Supabase.instance.client;
   static final _userRepo = AppUserSupabase();
 
-  User? get _currentUser => _supabase.auth.currentUser;
   Future<AppUser?> getCurrentUserById() async {
-    return await _userRepo.getUserById(_currentUser!.id);
+    final user = _supabase.auth.currentUser;
+    if (user == null) return null;
+    return await _userRepo.getUserById(user.id);
   }
 
   void listenForSignIn(BuildContext context) {
@@ -55,23 +56,29 @@ class AuthService {
   Future<void> internalSignUp(
     String email,
     String password,
-    String role,
     double salary,
+    String role,
   ) async {
     final res = await _supabase.auth.signUp(email: email, password: password);
     if (res.user != null) {
       final id = res.user!.id;
       await _userRepo.addUser(
-        AppUser(id: id, email: email, role: role, salary: salary),
+        AppUser(id: id, email: email, salary: salary, role: role),
       );
     }
   }
 
   Future<AuthResponse> signInWithPassword(String email, String password) async {
-    return await _supabase.auth.signInWithPassword(
+    final res = await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
+    if (res.user != null) {
+      final id = res.user!.id;
+      final user = await getCurrentUserById();
+      if (user == null) await _userRepo.addUser(AppUser(id: id, email: email));
+    }
+    return res;
   }
 
   Future<AuthResponse> signInWithGoogle() async {
@@ -90,10 +97,12 @@ class AuthService {
       accessToken: accessToken,
     );
     if (res.user != null) {
-      final id = _currentUser!.id;
-      final email = _currentUser!.email;
+      final id = res.user!.id;
+      final email = res.user!.email;
       final user = await getCurrentUserById();
-      if (user == null) await _userRepo.addUser(AppUser(id: id, email: email!));
+      if (user == null && email != null) {
+        await _userRepo.addUser(AppUser(id: id, email: email));
+      }
     }
     return res;
   }

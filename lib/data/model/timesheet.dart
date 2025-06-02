@@ -1,9 +1,9 @@
 class Timesheet {
-  int? id;
+  final int? id;
   final String userId;
   final DateTime date;
-  double hours;
-  DateTime createdAt;
+  final double hours;
+  final DateTime createdAt;
 
   Timesheet({
     this.id,
@@ -49,5 +49,5 @@ class Timesheet {
   }
 
   @override
-  String toString() => "AppUser($id, $userId, $date, $hours, $createdAt)";
+  String toString() => "Timesheet($id, $userId, $date, $hours, $createdAt)";
 }

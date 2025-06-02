@@ -33,7 +33,7 @@ class Nav {
       builder: (context, state) => const AddTimesheetScreen(),
     ),
     GoRoute(
-      path: "/timesheets/edit/:id",
+      path: "/timesheets/:id/edit",
       name: Screen.editTimesheet.name,
       builder:
           (context, state) =>
@@ -45,7 +45,7 @@ class Nav {
       builder: (context, state) => const AddRequestScreen(),
     ),
     GoRoute(
-      path: "/requests/edit/:id",
+      path: "/requests/:id",
       name: Screen.requestDetails.name,
       builder:
           (context, state) =>
@@ -57,7 +57,7 @@ class Nav {
       builder: (context, state) => const AddUserScreen(),
     ),
     GoRoute(
-      path: "/users/edit/:id",
+      path: "/users/:id/edit",
       name: Screen.editUser.name,
       builder:
           (context, state) => EditUserScreen(id: state.pathParameters["id"]!),

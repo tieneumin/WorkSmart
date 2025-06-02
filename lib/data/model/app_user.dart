@@ -1,30 +1,30 @@
 class AppUser {
   final String id;
   final String email;
-  String role;
-  double salary;
+  final double salary;
+  final String role;
   final DateTime createdAt;
 
   AppUser({
     required this.id,
     required this.email,
-    this.role = "Employee",
     this.salary = 0.0,
+    this.role = "Employee",
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   AppUser copy({
     String? id,
     String? email,
-    String? role,
     double? salary,
+    String? role,
     DateTime? createdAt,
   }) {
     return AppUser(
       id: id ?? this.id,
       email: email ?? this.email,
-      role: role ?? this.role,
       salary: salary ?? this.salary,
+      role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -32,8 +32,8 @@ class AppUser {
   Map<String, dynamic> toMap() => {
     "id": id,
     "email": email,
-    "role": role,
     "salary": salary,
+    "role": role,
     "created_at": createdAt.toIso8601String(),
   };
 
@@ -41,12 +41,12 @@ class AppUser {
     return AppUser(
       id: map["id"],
       email: map["email"],
-      role: map["role"],
       salary: (map["salary"] as num).toDouble(),
+      role: map["role"],
       createdAt: DateTime.parse(map["created_at"]),
     );
   }
 
   @override
-  String toString() => "AppUser($id, $email, $role, $salary, $createdAt)";
+  String toString() => "AppUser($id, $email, $salary, $role, $createdAt)";
 }

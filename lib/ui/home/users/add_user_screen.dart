@@ -49,7 +49,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
       return;
     }
     if (password != confirmPass) {
-      showErrorSnackbar("Passwords do not match", context);
+      showSnackbar("Passwords do not match", context);
       return;
     }
     final salary = double.tryParse(salaryText);
@@ -57,13 +57,15 @@ class _AddUserScreenState extends State<AddUserScreen> {
       setState(() => _salaryError = "Enter a valid salary");
       return;
     }
+
+    setState(() => _isLoading = true);
     try {
-      await _authService.internalSignUp(email, password, _role, salary);
+      await _authService.internalSignUp(email, password, salary, _role);
       if (mounted) context.pop(true);
     } on AuthException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showErrorSnackbar(e.message, context);
+      if (mounted) showSnackbar(e.message, context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -155,7 +157,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                     ),
                   ),
                   const SizedBox(height: 16.0),
-                  DropdownButtonFormField<String>(
+                  DropdownButtonFormField(
                     value: _role,
                     items: const [
                       DropdownMenuItem(value: "", child: Text("Select a role")),
@@ -166,8 +168,10 @@ class _AddUserScreenState extends State<AddUserScreen> {
                       DropdownMenuItem(value: "HR", child: Text("HR")),
                     ],
                     onChanged: (value) {
-                      if (value != null) setState(() => _role = value);
-                      if (value != "") setState(() => _roleError = null);
+                      if (value != null) {
+                        setState(() => _role = value);
+                        if (value != "") setState(() => _roleError = null);
+                      }
                     },
                     decoration: InputDecoration(
                       labelText: "Role",
