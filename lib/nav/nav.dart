@@ -6,6 +6,7 @@ import 'package:worksmart/ui/home/timesheets/add_timesheet_screen.dart';
 import 'package:worksmart/ui/home/timesheets/edit_timesheet_screen.dart';
 import 'package:worksmart/ui/home/requests/add_request_screen.dart';
 import 'package:worksmart/ui/home/requests/request_details_screen.dart';
+import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 import 'package:worksmart/ui/home/users/add_user_screen.dart';
 import 'package:worksmart/ui/home/users/edit_user_screen.dart';
 
@@ -30,14 +31,20 @@ class Nav {
     GoRoute(
       path: "/timesheets/add",
       name: Screen.addTimesheet.name,
-      builder: (context, state) => const AddTimesheetScreen(),
+      builder:
+          (context, state) => AddTimesheetScreen(
+            userId: state.uri.queryParameters["userId"],
+            email: state.uri.queryParameters["email"],
+          ),
     ),
     GoRoute(
       path: "/timesheets/:id/edit",
       name: Screen.editTimesheet.name,
       builder:
-          (context, state) =>
-              EditTimesheetScreen(id: state.pathParameters["id"]!),
+          (context, state) => EditTimesheetScreen(
+            id: state.pathParameters["id"]!,
+            email: state.uri.queryParameters["email"],
+          ),
     ),
     GoRoute(
       path: "/requests/add",
@@ -57,6 +64,15 @@ class Nav {
       builder: (context, state) => const AddUserScreen(),
     ),
     GoRoute(
+      path: "/users/:id/timesheets",
+      name: Screen.userTimesheets.name,
+      builder:
+          (context, state) => TimesheetsScreen(
+            userId: state.pathParameters["id"],
+            email: state.uri.queryParameters["email"],
+          ),
+    ),
+    GoRoute(
       path: "/users/:id/edit",
       name: Screen.editUser.name,
       builder:
@@ -74,5 +90,6 @@ enum Screen {
   addRequest,
   requestDetails,
   addUser,
+  userTimesheets,
   editUser,
 }

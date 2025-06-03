@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:worksmart/data/repo/request_supabase.dart';
 import 'package:worksmart/service/storage_service.dart';
 import 'package:worksmart/data/model/request.dart';
-import 'package:worksmart/data/model/app_user.dart';
+import 'package:worksmart/core/utils.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
-import 'package:worksmart/core/utils.dart';
-import 'package:pdfx/pdfx.dart';
 
 class RequestDetailsScreen extends StatefulWidget {
   const RequestDetailsScreen({super.key, required this.id});
@@ -22,18 +21,14 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
   final _storageService = StorageService();
   Request? _request;
   bool _isLoading = true;
-  bool _isError = false;
-
-  AppUser? _currentUser;
 
   @override
   void initState() {
-    _currentUser = context.read<UserProvider>().user;
     super.initState();
-    _init();
+    _initRequest();
   }
 
-  Future<void> _init() async {
+  Future<void> _initRequest() async {
     setState(() => _isLoading = true);
     try {
       final res = await _repo.getRequestById(int.parse(widget.id));
@@ -44,16 +39,15 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       });
     } catch (e) {
       setState(() {
-        _isError = true;
+        showSnackbar("Failed to load request", context);
         _isLoading = false;
       });
     }
   }
 
   Future<void> _updateStatus(String status) async {
-    final updated = _request!.copy(status: status);
     try {
-      await _repo.updateRequest(updated);
+      await _repo.updateRequest(_request!.copy(status: status));
       if (!mounted) return;
       showSnackbar(
         "Request ${status.toLowerCase()}",
@@ -62,7 +56,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       );
       context.pop(true);
     } catch (e) {
-      if (mounted) showSnackbar("Failed to update status", context);
+      showSnackbar("Failed to update status", context);
     }
   }
 
@@ -108,14 +102,14 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = context.watch<UserProvider>().user;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Request Details")),
       body: SafeArea(
         child:
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _isError == true
-                ? Center(child: Text("Failed to load request"))
                 : _request == null
                 ? const Center(child: Text("Request not found."))
                 : Padding(
@@ -158,7 +152,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                           onTap: () => _showAttachment(_request!.file!),
                           child: Row(
                             children: [
-                              const Icon(Icons.attach_file),
+                              const Icon(Icons.attachment),
                               const SizedBox(width: 8.0),
                               Text(
                                 _request!.file!,
@@ -174,7 +168,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                       ],
 
                       // only HR can approve/reject
-                      if (_currentUser!.role == "HR") ...[
+                      if (currentUser!.role == "HR") ...[
                         const SizedBox(height: 24.0),
                         Row(
                           children: [
@@ -189,7 +183,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                 ),
                                 onPressed:
                                     // HR cannot approve/reject own request
-                                    _request!.userId == _currentUser!.id ||
+                                    _request!.userId == currentUser.id ||
                                             _request!.status == "Approved"
                                         ? null
                                         : () => _updateStatus("Approved"),
@@ -206,7 +200,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                   minimumSize: const Size.fromHeight(48.0),
                                 ),
                                 onPressed:
-                                    _request!.userId == _currentUser!.id ||
+                                    _request!.userId == currentUser.id ||
                                             _request!.status == "Rejected"
                                         ? null
                                         : () => _updateStatus("Rejected"),

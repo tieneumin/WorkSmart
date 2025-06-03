@@ -48,10 +48,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       await _authService.signUp(email, password);
+      if (!mounted) return;
     } on AuthException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     }
   }
 
@@ -73,6 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: SingleChildScrollView(
             child: Card(
               elevation: 4.0,
+              color: Colors.white,
               margin: const EdgeInsets.all(24.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),

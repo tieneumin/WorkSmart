@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:worksmart/provider/user_provider.dart';
 import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 import 'package:worksmart/ui/home/requests/requests_screen.dart';
 import 'package:worksmart/ui/home/users/users_screen.dart';
@@ -12,29 +14,34 @@ class HomeTabContainer extends StatefulWidget {
 }
 
 class _HomeTabContainerState extends State<HomeTabContainer> {
-  late final List<Widget> _screens;
-  // late final List<Widget> _tabs;
+  var _screens = <Widget>[];
+  var _tabs = <Widget>[];
+  bool _initProvider = false;
 
   @override
-  void initState() {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initProvider) return;
+    final currentUser = context.watch<UserProvider>().user;
+    if (currentUser != null) {
+      _initScreensByRole(currentUser.role);
+      _initProvider = true;
+    }
+  }
+
+  void _initScreensByRole(String role) {
     _screens = [
       TimesheetsScreen(),
       RequestsScreen(),
-      UsersScreen(),
+      if (role == "HR") UsersScreen(),
       ProfileScreen(),
     ];
-    super.initState();
-
-    // _tabs =
-    //     getUserById(_).role == "employer"
-    //         ? [
-    //           _tabBarItem("Requests", Icons.approval),
-    //           _tabBarItem("Profile", Icons.person),
-    //         ]
-    //         : [
-    //           _tabBarItem("Requests", Icons.approval),
-    //           _tabBarItem("Profile", Icons.person),
-    //         ];
+    _tabs = [
+      _tabBarItem("Timesheets", Icons.punch_clock),
+      _tabBarItem("Requests", Icons.fact_check),
+      if (role == "HR") _tabBarItem("Users", Icons.group),
+      _tabBarItem("Profile", Icons.person),
+    ];
   }
 
   Widget _tabBarItem(String title, IconData icon) {
@@ -48,21 +55,19 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_screens.isEmpty || _screens.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return DefaultTabController(
       length: _screens.length,
       child: Scaffold(
         body: TabBarView(children: _screens),
         bottomNavigationBar: TabBar(
           indicatorColor: Colors.black,
-          // indicatorColor: Colors.transparent,
           labelColor: Colors.black,
           unselectedLabelColor: Colors.grey,
-          tabs: [
-            _tabBarItem("Timesheets", Icons.more_time),
-            _tabBarItem("Requests", Icons.fact_check),
-            _tabBarItem("Users", Icons.people),
-            _tabBarItem("Profile", Icons.person),
-          ],
+          tabs: _tabs,
         ),
       ),
     );

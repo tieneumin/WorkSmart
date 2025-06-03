@@ -9,11 +9,11 @@ class RequestSupabase {
   static final _supabase = Supabase.instance.client;
   static const _table = "requests";
 
-  Future<List<Request>> getRequests() async {
-    final res = await _supabase
-        .from(_table)
-        .select("*, app_users(email)")
-        .order("created_at", ascending: false);
+  Future<List<Request>> getRequests({String? userId}) async {
+    var query = _supabase.from(_table).select("*, app_users(email)");
+    // filter for employees but not HR
+    if (userId != null) query = query.eq("user_id", userId);
+    final res = await query.order("created_at", ascending: false);
     return res.map((map) => Request.fromMap(map)).toList();
   }
 

@@ -9,10 +9,12 @@ class TimesheetSupabase {
   static final _supabase = Supabase.instance.client;
   static const _table = "timesheets";
 
-  Future<List<Timesheet>> getTimesheets() async {
+  Future<List<Timesheet>> getTimesheetsByUserId(String userId) async {
     final res = await _supabase
         .from(_table)
         .select()
+        .eq("user_id", userId)
+        .order("date", ascending: false)
         .order("created_at", ascending: false);
     return res.map((map) => Timesheet.fromMap(map)).toList();
   }
@@ -34,7 +36,7 @@ class TimesheetSupabase {
         .eq("id", timesheet.id!);
   }
 
-  // Future<void> deleteTimesheet(int id) async {
-  //   await _supabase.from(_table).delete().eq("id", id);
-  // }
+  Future<void> deleteTimesheet(int id) async {
+    await _supabase.from(_table).delete().eq("id", id);
+  }
 }

@@ -42,8 +42,10 @@ dependencies:
   provider: ^6.1.5
   file_picker: ^10.1.9
   pdfx: ^2.9.1
-  fl_chart: ^1.0.0
 
+  # fl_chart: ^1.0.0
+  # pdf: ^3.11.3
+  # open_file: ^3.5.10
   # shared_preferences: ^2.5.3
 
 dev_dependencies:

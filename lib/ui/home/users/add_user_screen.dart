@@ -17,6 +17,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
   final _salaryController = TextEditingController();
+  String _role = "";
   String? _emailError;
   String? _passwordError;
   String? _confirmPassError;
@@ -24,15 +25,14 @@ class _AddUserScreenState extends State<AddUserScreen> {
   String? _roleError;
   bool _hidePassword = true;
   bool _hideConfirmPass = true;
-  bool _isLoading = false;
-
-  String _role = "";
+  bool _isSaving = false;
 
   Future<void> _createUser() async {
     final email = _emailController.text;
     final password = _passwordController.text;
     final confirmPass = _confirmPassController.text;
     final salaryText = _salaryController.text;
+    final salary = double.tryParse(salaryText);
 
     if (email.isEmpty ||
         password.isEmpty ||
@@ -52,22 +52,22 @@ class _AddUserScreenState extends State<AddUserScreen> {
       showSnackbar("Passwords do not match", context);
       return;
     }
-    final salary = double.tryParse(salaryText);
     if (salary == null || salary < 0) {
       setState(() => _salaryError = "Enter a valid salary");
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _isSaving = true);
     try {
       await _authService.internalSignUp(email, password, salary, _role);
-      if (mounted) context.pop(true);
+      if (!mounted) return;
+      context.pop(true);
     } on AuthException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isSaving = false);
     }
   }
 
@@ -180,7 +180,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                     ),
                   ),
                   const SizedBox(height: 24.0),
-                  _isLoading
+                  _isSaving
                       ? const CircularProgressIndicator()
                       : FilledButton(
                         onPressed: _createUser,

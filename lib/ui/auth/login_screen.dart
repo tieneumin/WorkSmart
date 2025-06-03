@@ -40,20 +40,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authService.signInWithPassword(email, password);
+      if (!mounted) return;
     } on AuthException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     }
   }
 
   Future<void> _signInWithGoogle() async {
     try {
       await _authService.signInWithGoogle();
+      if (!mounted) return;
     } on AuthException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     }
   }
 
@@ -74,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Card(
               elevation: 4.0,
+              color: Colors.white,
               margin: const EdgeInsets.all(24.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),

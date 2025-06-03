@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:worksmart/data/repo/request_supabase.dart';
 import 'package:worksmart/data/model/request.dart';
+import 'package:worksmart/data/model/app_user.dart';
+import 'package:provider/provider.dart';
+import 'package:worksmart/provider/user_provider.dart';
+import 'package:worksmart/core/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
 
@@ -16,20 +20,37 @@ class _RequestsScreenState extends State<RequestsScreen> {
   var _requests = <Request>[];
   bool _isLoading = true;
 
+  bool _initProvider = false;
+  AppUser? _user;
+
   @override
-  void initState() {
-    super.initState();
-    _refresh();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initProvider) return;
+    final currentUser = context.watch<UserProvider>().user;
+    if (currentUser != null) {
+      _user = currentUser;
+      _refresh();
+      _initProvider = true;
+    }
   }
 
   Future<void> _refresh() async {
     setState(() => _isLoading = true);
-    final res = await _repo.getRequests();
-    if (!mounted) return;
-    setState(() {
-      _requests = res;
+    try {
+      final res =
+          _user!.role == "HR"
+              ? await _repo.getRequests()
+              : await _repo.getRequests(userId: _user!.id);
+      if (!mounted) return;
+      setState(() {
+        _requests = res;
+        _isLoading = false;
+      });
+    } catch (e) {
+      showSnackbar("Failed to load requests", context);
       _isLoading = false;
-    });
+    }
   }
 
   Future<void> _navigateToAddRequest() async {
@@ -51,7 +72,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       appBar: AppBar(title: const Text("Requests")),
       body: SafeArea(
         child:
-            _isLoading
+            _isLoading || _user == null
                 ? const Center(child: CircularProgressIndicator())
                 : _requests.isEmpty
                 ? const Center(child: Text("No requests submitted"))
@@ -94,6 +115,7 @@ class RequestItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2.0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       child: InkWell(
         onTap: () => onClickItem(request),

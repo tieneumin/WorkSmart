@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:worksmart/data/repo/request_supabase.dart';
 import 'package:worksmart/service/storage_service.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:worksmart/data/model/request.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,11 +26,11 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   final _bodyController = TextEditingController();
   String? _titleError;
   String? _bodyError;
-  bool _isLoading = false;
-
-  String? _userId;
   String? _fileName;
   Uint8List? _bytes;
+  bool _isSaving = false;
+
+  String? _userId;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     super.initState();
   }
 
-  void _pickFile() async {
+  Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles();
 
     if (result != null && result.files.single.path != null) {
@@ -48,7 +48,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     }
   }
 
-  void _submitRequest() async {
+  Future<void> _submitRequest() async {
     final title = _titleController.text;
     final body = _bodyController.text;
 
@@ -60,7 +60,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _isSaving = true);
     try {
       if (_fileName != null && _bytes != null) {
         await _storageService.uploadFile(_fileName!, _bytes!);
@@ -68,11 +68,12 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       await _repo.addRequest(
         Request(userId: _userId!, title: title, body: body, file: _fileName),
       );
-      if (mounted) context.pop(true);
+      if (!mounted) return;
+      context.pop(true);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isSaving = false);
     }
   }
 
@@ -133,7 +134,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                     ],
                   ),
                   const SizedBox(height: 24.0),
-                  _isLoading
+                  _isSaving
                       ? const CircularProgressIndicator()
                       : FilledButton(
                         onPressed: _submitRequest,

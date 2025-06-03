@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:worksmart/data/model/timesheet.dart';
 import 'package:worksmart/data/repo/timesheet_supabase.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
+import 'package:worksmart/data/model/timesheet.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/core/utils.dart';
 
 class AddTimesheetScreen extends StatefulWidget {
-  const AddTimesheetScreen({super.key});
+  const AddTimesheetScreen({super.key, this.userId, this.email});
+  final String? userId;
+  final String? email;
 
   @override
   State<AddTimesheetScreen> createState() => _AddTimesheetScreenState();
@@ -17,21 +19,26 @@ class AddTimesheetScreen extends StatefulWidget {
 class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   final _repo = TimesheetSupabase();
   final _hoursController = TextEditingController();
+  DateTime? _date;
   String? _hoursError;
   String? _dateError;
-  bool _isLoading = false;
+  bool _isSaving = false;
 
+  bool isOtherUser = false;
   String? _userId;
-  DateTime? _selectedDate;
 
   @override
   void initState() {
-    _userId = context.read<UserProvider>().user!.id;
+    isOtherUser = widget.userId != null;
+    if (isOtherUser) {
+      _userId = widget.userId;
+    } else {
+      _userId = context.read<UserProvider>().user!.id;
+    }
     super.initState();
   }
 
   Future<void> _pickDate() async {
-    setState(() => _dateError = null);
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -39,37 +46,41 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
       firstDate: DateTime(now.year, now.month - 1),
       lastDate: now,
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        _date = picked;
+        _dateError = null;
+      });
+    }
   }
 
   Future<void> _addTimesheet() async {
     final hoursText = _hoursController.text;
-    final date = _selectedDate;
+    final hours = double.tryParse(hoursText);
 
-    if (date == null || hoursText.isEmpty) {
+    if (_date == null || hoursText.isEmpty) {
       setState(() {
-        if (date == null) _dateError = "Date is required";
+        if (_date == null) _dateError = "Date is required";
         if (hoursText.isEmpty) _hoursError = "Hours are required";
       });
       return;
     }
-
-    final hours = double.tryParse(hoursText);
     if (hours == null || hours < 0 || hours > 24) {
       setState(() => _hoursError = "Enter a valid number of hours");
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _isSaving = true);
     try {
       await _repo.addTimesheet(
-        Timesheet(userId: _userId!, hours: hours, date: date),
+        Timesheet(userId: _userId!, hours: hours, date: _date),
       );
-      if (mounted) context.pop(true);
+      if (!mounted) return;
+      context.pop(true);
     } on PostgrestException catch (e) {
-      if (mounted) showSnackbar(e.message, context);
+      showSnackbar(e.message, context);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isSaving = false);
     }
   }
 
@@ -82,7 +93,15 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Timesheet")),
+      appBar: AppBar(
+        title:
+            isOtherUser
+                ? Text(
+                  "Add Timesheet (${widget.email})",
+                  style: TextStyle(fontSize: 20.0),
+                )
+                : const Text("Add Timesheet"),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -99,9 +118,9 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
                         border: const OutlineInputBorder(),
                       ),
                       child: Text(
-                        _selectedDate == null
+                        _date == null
                             ? "Select a date"
-                            : _selectedDate!.toIso8601String().split("T")[0],
+                            : _date!.toIso8601String().split("T")[0],
                       ),
                     ),
                   ),
@@ -119,7 +138,7 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
                     ),
                   ),
                   const SizedBox(height: 24.0),
-                  _isLoading
+                  _isSaving
                       ? const CircularProgressIndicator()
                       : FilledButton(
                         onPressed: _addTimesheet,
