@@ -6,9 +6,9 @@ import 'package:worksmart/ui/home/timesheets/add_timesheet_screen.dart';
 import 'package:worksmart/ui/home/timesheets/edit_timesheet_screen.dart';
 import 'package:worksmart/ui/home/requests/add_request_screen.dart';
 import 'package:worksmart/ui/home/requests/request_details_screen.dart';
-import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 import 'package:worksmart/ui/home/users/add_user_screen.dart';
 import 'package:worksmart/ui/home/users/edit_user_screen.dart';
+import 'package:worksmart/ui/home/timesheets/timesheets_screen.dart';
 
 class Nav {
   static const initial = "/login";
@@ -64,6 +64,12 @@ class Nav {
       builder: (context, state) => const AddUserScreen(),
     ),
     GoRoute(
+      path: "/users/:id/edit",
+      name: Screen.editUser.name,
+      builder:
+          (context, state) => EditUserScreen(id: state.pathParameters["id"]!),
+    ),
+    GoRoute(
       path: "/users/:id/timesheets",
       name: Screen.userTimesheets.name,
       builder:
@@ -72,17 +78,10 @@ class Nav {
             email: state.uri.queryParameters["email"],
           ),
     ),
-    GoRoute(
-      path: "/users/:id/edit",
-      name: Screen.editUser.name,
-      builder:
-          (context, state) => EditUserScreen(id: state.pathParameters["id"]!),
-    ),
   ];
 }
 
 enum Screen {
-  payslip,
   login,
   signUp,
   home,

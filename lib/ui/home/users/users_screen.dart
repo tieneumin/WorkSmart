@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:worksmart/data/repo/app_user_supabase.dart';
 import 'package:worksmart/data/model/app_user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/core/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:worksmart/nav/nav.dart';
@@ -29,19 +30,17 @@ class _UsersScreenState extends State<UsersScreen> {
     setState(() => _isLoading = true);
     try {
       final res = await _repo.getUsers();
+      _users = res;
       if (!mounted) return;
-      setState(() {
-        _users = res;
-        _isLoading = false;
-      });
-    } catch (e) {
+      setState(() => _isLoading = false);
+    } on PostgrestException {
       showSnackbar("Failed to load users", context);
       _isLoading = false;
     }
   }
 
   Future<void> _navigateToAddUser() async {
-    var res = await context.pushNamed(Screen.addUser.name);
+    final res = await context.pushNamed(Screen.addUser.name);
     if (res == true) _refresh();
   }
 
@@ -54,7 +53,7 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Future<void> _navigateToEditUser(String id) async {
-    var res = await context.pushNamed(
+    final res = await context.pushNamed(
       Screen.editUser.name,
       pathParameters: {"id": id},
     );
@@ -84,9 +83,9 @@ class _UsersScreenState extends State<UsersScreen> {
                         (context, index) => UserItem(
                           user: _users[index],
                           currentUser: currentUser,
-                          onClickDetails:
+                          onClickTimesheets:
                               (user) => _navigateToUserTimesheets(user),
-                          onClickEdit: (user) => _navigateToEditUser(user.id),
+                          onClickEdit: (id) => _navigateToEditUser(id),
                         ),
                   ),
                 ),
@@ -105,20 +104,22 @@ class UserItem extends StatelessWidget {
     super.key,
     required this.user,
     required this.currentUser,
-    required this.onClickDetails,
+    required this.onClickTimesheets,
     required this.onClickEdit,
   });
   final AppUser user;
   final AppUser? currentUser;
-  final Function(AppUser) onClickDetails;
-  final Function(AppUser) onClickEdit;
+  final Function(AppUser) onClickTimesheets;
+  final Function(String) onClickEdit;
 
   @override
   Widget build(BuildContext context) {
+    final isCurrentUser = user.id == currentUser?.id;
+
     return Card(
       elevation: 2.0,
+      color: !isCurrentUser ? Colors.white : Colors.blueGrey[50],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      color: user.id != currentUser?.id ? Colors.white : Colors.blueGrey[50],
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           vertical: 8.0,
@@ -146,16 +147,16 @@ class UserItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // HR cannot change own salary/role
-            if (user.id != currentUser?.id) ...[
+            if (!isCurrentUser) ...[
               IconButton(
+                onPressed: () => onClickTimesheets(user),
+                tooltip: "View timesheets",
                 icon: const Icon(Icons.punch_clock),
-                tooltip: "View Timesheets",
-                onPressed: () => onClickDetails(user),
               ),
               IconButton(
-                icon: Icon(Icons.edit, color: Colors.blue[700]),
+                onPressed: () => onClickEdit(user.id),
                 tooltip: "Edit",
-                onPressed: () => onClickEdit(user),
+                icon: Icon(Icons.edit, color: Colors.blue[700]),
               ),
             ],
           ],

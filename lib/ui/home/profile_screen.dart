@@ -42,13 +42,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<Uint8List> _generatePayslip(AppUser user) async {
-    final img = await rootBundle.load("assets/logo.png");
-    final imageBytes = img.buffer.asUint8List();
+    final logo = await rootBundle.load("assets/images/logo.png");
+    final logoBytes = logo.buffer.asUint8List();
     final regFont = pw.Font.ttf(
-      await rootBundle.load("assets/NotoSans-Regular.ttf"),
+      await rootBundle.load("assets/fonts/NotoSans-Regular.ttf"),
     );
     final boldFont = pw.Font.ttf(
-      await rootBundle.load("assets/NotoSans-Bold.ttf"),
+      await rootBundle.load("assets/fonts/NotoSans-Bold.ttf"),
     );
 
     final pdf = pw.Document();
@@ -57,10 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         pageFormat: pp.PdfPageFormat.a5.landscape,
         build:
             (pw.Context context) => payslipPdf(
-              email: user.email,
-              role: user.role,
-              salary: user.salary,
-              logo: imageBytes,
+              user: user,
+              logo: logoBytes,
               regFont: regFont,
               boldFont: boldFont,
             ),
@@ -72,6 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = context.watch<UserProvider>().user;
+    final avatarUrl = _authService.getCurrentUserAvatarUrl();
 
     return Scaffold(
       appBar: AppBar(title: const Text("Profile")),
@@ -92,8 +91,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.account_circle, size: 64.0),
-                          const SizedBox(height: 16.0),
+                          avatarUrl != null
+                              ? CircleAvatar(
+                                radius: 32.0,
+                                backgroundImage: NetworkImage(avatarUrl),
+                              )
+                              : const CircleAvatar(
+                                radius: 32.0,
+                                child: Icon(Icons.account_circle),
+                              ),
+                          const SizedBox(height: 24.0),
                           Text(
                             "Email: ${currentUser.email}",
                             style: const TextStyle(fontSize: 16.0),
@@ -108,11 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             "Role: ${currentUser.role}",
                             style: const TextStyle(fontSize: 16.0),
                           ),
-                          const SizedBox(height: 16.0),
+                          const SizedBox(height: 24.0),
                           ElevatedButton.icon(
                             onPressed: () => _showPayslip(currentUser),
                             label: const Text("Show monthly e-payslip"),
-                            icon: const Icon(Icons.receipt),
+                            icon: const Icon(Icons.receipt_long_outlined),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48.0),
                             ),

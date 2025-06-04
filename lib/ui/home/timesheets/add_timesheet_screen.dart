@@ -73,13 +73,12 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
     setState(() => _isSaving = true);
     try {
       await _repo.addTimesheet(
-        Timesheet(userId: _userId!, hours: hours, date: _date),
+        Timesheet(userId: _userId!, date: _date, hours: hours),
       );
       if (!mounted) return;
       context.pop(true);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
-    } finally {
+    } on PostgrestException {
+      showSnackbar("Failed to add timesheet", context);
       setState(() => _isSaving = false);
     }
   }
@@ -91,65 +90,61 @@ class _AddTimesheetScreenState extends State<AddTimesheetScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title:
-            isOtherUser
-                ? Text(
-                  "Add Timesheet (${widget.email})",
-                  style: TextStyle(fontSize: 20.0),
-                )
-                : const Text("Add Timesheet"),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  InkWell(
-                    onTap: _pickDate,
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: "Date",
-                        errorText: _dateError,
-                        border: const OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        _date == null
-                            ? "Select a date"
-                            : _date!.toIso8601String().split("T")[0],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: _hoursController,
-                    onChanged: (_) => setState(() => _hoursError = null),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title:
+          isOtherUser
+              ? Text(
+                "Add Timesheet (${widget.email})",
+                style: TextStyle(fontSize: 20.0),
+              )
+              : const Text("Add Timesheet"),
+    ),
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                InkWell(
+                  onTap: _pickDate,
+                  child: InputDecorator(
                     decoration: InputDecoration(
-                      labelText: "Hours",
-                      errorText: _hoursError,
+                      labelText: "Date",
+                      errorText: _dateError,
                       border: const OutlineInputBorder(),
                     ),
+                    child: Text(
+                      _date == null
+                          ? "Select a date"
+                          : _date!.toIso8601String().split("T")[0],
+                    ),
                   ),
-                  const SizedBox(height: 24.0),
-                  _isSaving
-                      ? const CircularProgressIndicator()
-                      : FilledButton(
-                        onPressed: _addTimesheet,
-                        child: const Text("Add"),
-                      ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: _hoursController,
+                  onChanged: (_) => setState(() => _hoursError = null),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: "Hours",
+                    errorText: _hoursError,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 24.0),
+                _isSaving
+                    ? const CircularProgressIndicator()
+                    : FilledButton(
+                      onPressed: _addTimesheet,
+                      child: const Text("Add"),
+                    ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

@@ -7,7 +7,7 @@ class Request {
   final String? file; // '.' empty string check not working
   final DateTime createdAt;
 
-  final String? email; // to reference app_users' email
+  final String? email; // to reference app_users' emails
 
   Request({
     this.id,
@@ -71,5 +71,5 @@ class Request {
 
   @override
   String toString() =>
-      "Request{$id, $userId, $title, $body, $status, $file, $createdAt}";
+      "Request{$id, $userId, $title, $body, $status, $file, $createdAt, $email}";
 }

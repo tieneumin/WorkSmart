@@ -43,8 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
     } on AuthException catch (e) {
       showSnackbar(e.message, context);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
     }
   }
 
@@ -54,8 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
     } on AuthException catch (e) {
       showSnackbar(e.message, context);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
+    } on PostgrestException {
+      showSnackbar("Failed to create user", context);
     }
   }
 
@@ -69,90 +67,86 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Card(
-              elevation: 4.0,
-              color: Colors.white,
-              margin: const EdgeInsets.all(24.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset("assets/logo.png"),
-                    const SizedBox(height: 24.0),
-                    TextField(
-                      controller: _emailController,
-                      autofocus: true,
-                      onChanged: (_) => setState(() => _emailError = null),
-                      decoration: InputDecoration(
-                        labelText: "Email",
-                        errorText: _emailError,
-                        border: const OutlineInputBorder(),
-                      ),
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Card(
+            elevation: 4.0,
+            color: Colors.white,
+            margin: const EdgeInsets.all(24.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  Image.asset("assets/images/logo.png"),
+                  const SizedBox(height: 24.0),
+                  TextField(
+                    autofocus: true,
+                    controller: _emailController,
+                    onChanged: (_) => setState(() => _emailError = null),
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      errorText: _emailError,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: _passwordController,
-                      onChanged: (_) => setState(() => _passwordError = null),
-                      obscureText: _hidePassword,
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        errorText: _passwordError,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _hidePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed:
-                              () => setState(
-                                () => _hidePassword = !_hidePassword,
-                              ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    obscureText: _hidePassword,
+                    controller: _passwordController,
+                    onChanged: (_) => setState(() => _passwordError = null),
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      errorText: _passwordError,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed:
+                            () =>
+                                setState(() => _hidePassword = !_hidePassword),
+                        icon: Icon(
+                          _hidePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24.0),
-                    FilledButton(
-                      onPressed: _signInWithPassword,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48.0),
-                      ),
-                      child: const Text("Log In"),
+                  ),
+                  const SizedBox(height: 24.0),
+                  FilledButton(
+                    onPressed: _signInWithPassword,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48.0),
                     ),
-                    const SizedBox(height: 16.0),
-                    FilledButton.icon(
-                      onPressed: _signInWithGoogle,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48.0),
-                      ),
-                      label: const Text("Log in with Google"),
-                      icon: Image.asset(
-                        "assets/google.png",
-                        width: 24.0,
-                        height: 24.0,
-                      ),
+                    child: const Text("Log In"),
+                  ),
+                  const SizedBox(height: 16.0),
+                  FilledButton.icon(
+                    onPressed: _signInWithGoogle,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48.0),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextButton(
-                      onPressed: _navigateToSignUp,
-                      child: const Text("Don't have an account? Sign up"),
+                    label: const Text("Log in with Google"),
+                    icon: Image.asset(
+                      "assets/images/google.png",
+                      width: 24.0,
+                      height: 24.0,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextButton(
+                    onPressed: _navigateToSignUp,
+                    child: const Text("Don't have an account? Sign up"),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

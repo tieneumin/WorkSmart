@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:worksmart/data/repo/timesheet_supabase.dart';
 import 'package:worksmart/data/model/timesheet.dart';
-import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/core/utils.dart';
+import 'package:go_router/go_router.dart';
 
 class EditTimesheetScreen extends StatefulWidget {
   const EditTimesheetScreen({super.key, required this.id, this.email});
@@ -17,8 +18,8 @@ class _EditTimesheetScreenState extends State<EditTimesheetScreen> {
   final _repo = TimesheetSupabase();
   DateTime? _date;
   final _hoursController = TextEditingController();
-  String? _hoursError;
   String? _dateError;
+  String? _hoursError;
   Timesheet? _timesheet;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -33,15 +34,13 @@ class _EditTimesheetScreenState extends State<EditTimesheetScreen> {
     setState(() => _isLoading = true);
     try {
       final res = await _repo.getTimesheetById(int.parse(widget.id));
+      _timesheet = res;
+      _date = res?.date;
+      _hoursController.text = res?.hours.toString() ?? "";
       if (!mounted) return;
-      setState(() {
-        _timesheet = res;
-        _date = res?.date;
-        _hoursController.text = res?.hours.toString() ?? "";
-        _isLoading = false;
-      });
-    } catch (e) {
-      showSnackbar('Failed to load timesheet', context);
+      setState(() => _isLoading = false);
+    } on PostgrestException {
+      showSnackbar("Failed to load timesheet details", context);
       setState(() => _isLoading = false);
     }
   }
@@ -82,11 +81,10 @@ class _EditTimesheetScreenState extends State<EditTimesheetScreen> {
     try {
       await _repo.updateTimesheet(_timesheet!.copy(date: _date, hours: hours));
       if (!mounted) return;
-      showSnackbar("Timesheet updated", context, error: false);
+      showSnackbar("Timesheet updated", context, success: true);
       context.pop(true);
-    } catch (e) {
+    } on PostgrestException {
       showSnackbar("Failed to update timesheet", context);
-    } finally {
       setState(() => _isSaving = false);
     }
   }
@@ -98,71 +96,68 @@ class _EditTimesheetScreenState extends State<EditTimesheetScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title:
-            widget.email != null
-                ? Text(
-                  "Edit Timesheet (${widget.email})",
-                  style: TextStyle(fontSize: 20.0),
-                )
-                : const Text("Edit Timesheet"),
-      ),
-      body: SafeArea(
-        child: Center(
-          child:
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : _timesheet == null
-                  ? const Text("Timesheet not found")
-                  : SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          InkWell(
-                            onTap: _pickDate,
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: "Date",
-                                errorText: _dateError,
-                                border: const OutlineInputBorder(),
-                              ),
-                              child: Text(
-                                _date == null
-                                    ? "Select a date"
-                                    : _date!.toIso8601String().split("T")[0],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
-                          TextField(
-                            controller: _hoursController,
-                            onChanged:
-                                (_) => setState(() => _hoursError = null),
-                            keyboardType: TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title:
+          widget.email != null
+              ? Text(
+                "Edit Timesheet (${widget.email})",
+                style: TextStyle(fontSize: 20.0),
+              )
+              : const Text("Edit Timesheet"),
+    ),
+    body: SafeArea(
+      child: Center(
+        child:
+            _isLoading
+                ? const CircularProgressIndicator()
+                : _timesheet == null
+                ? const Text("Timesheet not found")
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: _pickDate,
+                          child: InputDecorator(
                             decoration: InputDecoration(
-                              labelText: "Hours",
-                              errorText: _hoursError,
+                              labelText: "Date",
+                              errorText: _dateError,
                               border: const OutlineInputBorder(),
                             ),
+                            child: Text(
+                              _date == null
+                                  ? "Select a date"
+                                  : _date!.toIso8601String().split("T")[0],
+                            ),
                           ),
-                          const SizedBox(height: 24.0),
-                          _isSaving
-                              ? const CircularProgressIndicator()
-                              : FilledButton(
-                                onPressed: _updateTimesheet,
-                                child: const Text("Update"),
-                              ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 16.0),
+                        TextField(
+                          controller: _hoursController,
+                          onChanged: (_) => setState(() => _hoursError = null),
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: "Hours",
+                            errorText: _hoursError,
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 24.0),
+                        _isSaving
+                            ? const CircularProgressIndicator()
+                            : FilledButton(
+                              onPressed: _updateTimesheet,
+                              child: const Text("Update"),
+                            ),
+                      ],
                     ),
                   ),
-        ),
+                ),
       ),
-    );
-  }
+    ),
+  );
 }

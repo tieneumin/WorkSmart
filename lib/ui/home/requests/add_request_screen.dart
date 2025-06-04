@@ -70,9 +70,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       );
       if (!mounted) return;
       context.pop(true);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
-    } finally {
+    } on PostgrestException {
+      showSnackbar("Failed to submit request", context);
       setState(() => _isSaving = false);
     }
   }
@@ -85,67 +84,67 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Submit Request")),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _titleController,
-                    onChanged: (_) => setState(() => _titleError = null),
-                    decoration: InputDecoration(
-                      labelText: "Subject",
-                      errorText: _titleError,
-                      border: const OutlineInputBorder(),
-                    ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Submit Request")),
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _titleController,
+                  onChanged: (_) => setState(() => _titleError = null),
+                  decoration: InputDecoration(
+                    labelText: "Subject",
+                    errorText: _titleError,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: _bodyController,
-                    onChanged: (_) => setState(() => _bodyError = null),
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      alignLabelWithHint: true,
-                      labelText: "Details",
-                      errorText: _bodyError,
-                      border: const OutlineInputBorder(),
-                    ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  maxLines: 5,
+                  controller: _bodyController,
+                  onChanged: (_) => setState(() => _bodyError = null),
+                  decoration: InputDecoration(
+                    alignLabelWithHint: true,
+                    labelText: "Details",
+                    errorText: _bodyError,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _pickFile,
-                        label: const Text("Attach file"),
-                        icon: const Icon(Icons.attach_file),
+                ),
+                const SizedBox(height: 24.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickFile,
+                      label: const Text("Attach file"),
+                      icon: const Icon(Icons.attach_file),
+                    ),
+                    if (_fileName != null) ...[
+                      SizedBox(width: 12.0),
+                      Text(
+                        _fileName!,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      if (_fileName != null)
-                        Text(
-                          _fileName!,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
                     ],
-                  ),
-                  const SizedBox(height: 16.0),
-                  _isSaving
-                      ? const CircularProgressIndicator()
-                      : FilledButton(
-                        onPressed: _submitRequest,
-                        child: const Text("Submit"),
-                      ),
-                ],
-              ),
+                  ],
+                ),
+                const SizedBox(height: 16.0),
+                _isSaving
+                    ? const CircularProgressIndicator()
+                    : FilledButton(
+                      onPressed: _submitRequest,
+                      child: const Text("Submit"),
+                    ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

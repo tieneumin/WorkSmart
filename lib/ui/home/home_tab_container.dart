@@ -46,30 +46,26 @@ class _HomeTabContainerState extends State<HomeTabContainer> {
 
   Widget _tabBarItem(String title, IconData icon) {
     return SizedBox(
-      height: 48.0,
+      height: 60.0,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [Icon(icon), Text(title, overflow: TextOverflow.ellipsis)],
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_screens.isEmpty || _screens.isEmpty) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    return DefaultTabController(
-      length: _screens.length,
-      child: Scaffold(
-        body: TabBarView(children: _screens),
-        bottomNavigationBar: TabBar(
-          indicatorColor: Colors.black,
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.grey,
-          tabs: _tabs,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      !_initProvider
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : DefaultTabController(
+            length: _screens.length,
+            child: Scaffold(
+              body: TabBarView(children: _screens),
+              bottomNavigationBar: TabBar(
+                tabs: _tabs,
+                unselectedLabelColor: Colors.blueGrey,
+              ),
+            ),
+          );
 }

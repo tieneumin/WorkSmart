@@ -21,6 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _confirmPassError;
   bool _hidePassword = true;
   bool _hideConfirmPass = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -46,13 +47,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
+    setState(() => _isSaving = true);
     try {
       await _authService.signUp(email, password);
       if (!mounted) return;
     } on AuthException catch (e) {
       showSnackbar(e.message, context);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
+      setState(() => _isSaving = false);
+    } on PostgrestException {
+      showSnackbar("Failed to create user", context);
+      setState(() => _isSaving = false);
     }
   }
 
@@ -67,100 +71,97 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Card(
-              elevation: 4.0,
-              color: Colors.white,
-              margin: const EdgeInsets.all(24.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset("assets/logo.png"),
-                    const SizedBox(height: 24.0),
-                    TextField(
-                      controller: _emailController,
-                      autofocus: true,
-                      onChanged: (_) => setState(() => _emailError = null),
-                      decoration: InputDecoration(
-                        labelText: "Email",
-                        errorText: _emailError,
-                        border: const OutlineInputBorder(),
-                      ),
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Card(
+            elevation: 4.0,
+            color: Colors.white,
+            margin: const EdgeInsets.all(24.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  Image.asset("assets/images/logo.png"),
+                  const SizedBox(height: 24.0),
+                  TextField(
+                    autofocus: true,
+                    controller: _emailController,
+                    onChanged: (_) => setState(() => _emailError = null),
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      errorText: _emailError,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: _passwordController,
-                      onChanged: (_) => setState(() => _passwordError = null),
-                      obscureText: _hidePassword,
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        errorText: _passwordError,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _hidePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed:
-                              () => setState(
-                                () => _hidePassword = !_hidePassword,
-                              ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    obscureText: _hidePassword,
+                    controller: _passwordController,
+                    onChanged: (_) => setState(() => _passwordError = null),
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      errorText: _passwordError,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed:
+                            () =>
+                                setState(() => _hidePassword = !_hidePassword),
+                        icon: Icon(
+                          _hidePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      controller: _confirmPassController,
-                      onChanged:
-                          (_) => setState(() => _confirmPassError = null),
-                      obscureText: _hideConfirmPass,
-                      decoration: InputDecoration(
-                        labelText: "Confirm password",
-                        errorText: _confirmPassError,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _hideConfirmPass
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed:
-                              () => setState(
-                                () => _hideConfirmPass = !_hideConfirmPass,
-                              ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    obscureText: _hideConfirmPass,
+                    controller: _confirmPassController,
+                    onChanged: (_) => setState(() => _confirmPassError = null),
+                    decoration: InputDecoration(
+                      labelText: "Confirm password",
+                      errorText: _confirmPassError,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed:
+                            () => setState(
+                              () => _hideConfirmPass = !_hideConfirmPass,
+                            ),
+                        icon: Icon(
+                          _hideConfirmPass
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24.0),
-                    FilledButton(
-                      onPressed: _signUp,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48.0),
+                  ),
+                  const SizedBox(height: 24.0),
+                  _isSaving
+                      ? const CircularProgressIndicator()
+                      : FilledButton(
+                        onPressed: _signUp,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48.0),
+                        ),
+                        child: const Text("Sign Up"),
                       ),
-                      child: const Text("Sign Up"),
-                    ),
-                    const SizedBox(height: 16.0),
-                    TextButton(
-                      onPressed: _navigateToLogin,
-                      child: const Text("Already have an account? Log in"),
-                    ),
-                  ],
-                ),
+                  const SizedBox(height: 16.0),
+                  TextButton(
+                    onPressed: _navigateToLogin,
+                    child: const Text("Already have an account? Log in"),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

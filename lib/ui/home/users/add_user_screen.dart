@@ -17,7 +17,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
   final _salaryController = TextEditingController();
-  String _role = "";
+  String? _role;
   String? _emailError;
   String? _passwordError;
   String? _confirmPassError;
@@ -38,13 +38,13 @@ class _AddUserScreenState extends State<AddUserScreen> {
         password.isEmpty ||
         confirmPass.isEmpty ||
         salaryText.isEmpty ||
-        _role.isEmpty) {
+        _role == null) {
       setState(() {
         if (email.isEmpty) _emailError = "Email is required";
         if (password.isEmpty) _passwordError = "Password is required";
         if (confirmPass.isEmpty) _confirmPassError = "Confirm passwords match";
         if (salaryText.isEmpty) _salaryError = "Salary is required";
-        if (_role.isEmpty) _roleError = "Role is required";
+        if (_role == null) _roleError = "Role is required";
       });
       return;
     }
@@ -59,14 +59,14 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
     setState(() => _isSaving = true);
     try {
-      await _authService.internalSignUp(email, password, salary, _role);
+      await _authService.internalSignUp(email, password, salary, _role!);
       if (!mounted) return;
       context.pop(true);
     } on AuthException catch (e) {
       showSnackbar(e.message, context);
-    } on PostgrestException catch (e) {
-      showSnackbar(e.message, context);
-    } finally {
+      setState(() => _isSaving = false);
+    } on PostgrestException {
+      showSnackbar("Failed to create user", context);
       setState(() => _isSaving = false);
     }
   }
@@ -81,117 +81,108 @@ class _AddUserScreenState extends State<AddUserScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Create User")),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _emailController,
-                    onChanged: (_) => setState(() => _emailError = null),
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      errorText: _emailError,
-                      border: const OutlineInputBorder(),
-                    ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Create User")),
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _emailController,
+                  onChanged: (_) => setState(() => _emailError = null),
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    errorText: _emailError,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: _passwordController,
-                    onChanged: (_) => setState(() => _passwordError = null),
-                    obscureText: _hidePassword,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      errorText: _passwordError,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed:
-                            () =>
-                                setState(() => _hidePassword = !_hidePassword),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  obscureText: _hidePassword,
+                  controller: _passwordController,
+                  onChanged: (_) => setState(() => _passwordError = null),
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    errorText: _passwordError,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          () => setState(() => _hidePassword = !_hidePassword),
+                      icon: Icon(
+                        _hidePassword ? Icons.visibility_off : Icons.visibility,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: _confirmPassController,
-                    onChanged: (_) => setState(() => _confirmPassError = null),
-                    obscureText: _hideConfirmPass,
-                    decoration: InputDecoration(
-                      labelText: "Confirm password",
-                      errorText: _confirmPassError,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hideConfirmPass
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed:
-                            () => setState(
-                              () => _hideConfirmPass = !_hideConfirmPass,
-                            ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: _confirmPassController,
+                  onChanged: (_) => setState(() => _confirmPassError = null),
+                  obscureText: _hideConfirmPass,
+                  decoration: InputDecoration(
+                    labelText: "Confirm password",
+                    errorText: _confirmPassError,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          () => setState(
+                            () => _hideConfirmPass = !_hideConfirmPass,
+                          ),
+                      icon: Icon(
+                        _hideConfirmPass
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  TextField(
-                    controller: _salaryController,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => setState(() => _salaryError = null),
-                    decoration: InputDecoration(
-                      labelText: "Salary",
-                      errorText: _salaryError,
-                      border: const OutlineInputBorder(),
-                    ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: _salaryController,
+                  onChanged: (_) => setState(() => _salaryError = null),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: "Salary",
+                    errorText: _salaryError,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16.0),
-                  DropdownButtonFormField(
-                    value: _role,
-                    items: const [
-                      DropdownMenuItem(value: "", child: Text("Select a role")),
-                      DropdownMenuItem(
-                        value: "Employee",
-                        child: Text("Employee"),
-                      ),
-                      DropdownMenuItem(value: "HR", child: Text("HR")),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _role = value);
-                        if (value != "") setState(() => _roleError = null);
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: "Role",
-                      errorText: _roleError,
-                      border: const OutlineInputBorder(),
+                ),
+                const SizedBox(height: 16.0),
+                DropdownButtonFormField(
+                  value: _role,
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text("Select a role")),
+                    DropdownMenuItem(
+                      value: "Employee",
+                      child: Text("Employee"),
                     ),
+                    DropdownMenuItem(value: "HR", child: Text("HR")),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _role = value);
+                    if (value != null) setState(() => _roleError = null);
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Role",
+                    errorText: _roleError,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 24.0),
-                  _isSaving
-                      ? const CircularProgressIndicator()
-                      : FilledButton(
-                        onPressed: _createUser,
-                        child: const Text("Create"),
-                      ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 24.0),
+                _isSaving
+                    ? const CircularProgressIndicator()
+                    : FilledButton(
+                      onPressed: _createUser,
+                      child: const Text("Create"),
+                    ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

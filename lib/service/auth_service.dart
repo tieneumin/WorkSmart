@@ -22,13 +22,18 @@ class AuthService {
     return await _userRepo.getUserById(user.id);
   }
 
+  String? getCurrentUserAvatarUrl() {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return null;
+    return user.userMetadata?["avatar_url"];
+  }
+
   void listenForSignIn(BuildContext context) {
     _supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedIn) {
-        if (context.mounted) {
-          context.read<UserProvider>().getCurrentUser();
-          context.go("/");
-        }
+        if (!context.mounted) return;
+        context.read<UserProvider>().getCurrentUser();
+        context.go("/");
       }
     });
   }
@@ -36,10 +41,9 @@ class AuthService {
   void listenForSignOut(BuildContext context) {
     _supabase.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.signedOut) {
-        if (context.mounted) {
-          context.read<UserProvider>().clearUser();
-          context.go("/login");
-        }
+        if (!context.mounted) return;
+        context.read<UserProvider>().clearUser();
+        context.go("/login");
       }
     });
   }
@@ -69,16 +73,10 @@ class AuthService {
   }
 
   Future<AuthResponse> signInWithPassword(String email, String password) async {
-    final res = await _supabase.auth.signInWithPassword(
+    return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
-    if (res.user != null) {
-      final id = res.user!.id;
-      final user = await getCurrentUserById();
-      if (user == null) await _userRepo.addUser(AppUser(id: id, email: email));
-    }
-    return res;
   }
 
   Future<AuthResponse> signInWithGoogle() async {

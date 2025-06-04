@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:worksmart/data/repo/timesheet_supabase.dart';
 import 'package:worksmart/data/model/timesheet.dart';
 import 'package:provider/provider.dart';
@@ -26,11 +27,14 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
   bool isOtherUser = false;
   String? _userId;
 
+  DateTimeRange? _dateRange;
+  var _filteredTimesheets = <Timesheet>[];
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initProvider) return;
-    // use UserProvider at HomeTabContainer; use widget.userId if navigating from UsersScreen
+    // use UserProvider at HomeTabContainer, widget.userId if coming from UsersScreen
     isOtherUser = widget.userId != null;
     final currentUser = context.watch<UserProvider>().user;
     if (isOtherUser) {
@@ -48,19 +52,60 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
     setState(() => _isLoading = true);
     try {
       final res = await _repo.getTimesheetsByUserId(_userId!);
-      if (!mounted) return;
-      setState(() {
-        _timesheets = res;
-        _isLoading = false;
-      });
-    } catch (e) {
-      showSnackbar("Failed to load timesheets", context);
+      _timesheets = res;
       _isLoading = false;
+      if (!mounted) return;
+      _applyFilter();
+    } on PostgrestException {
+      showSnackbar("Failed to load timesheets", context);
+      setState(() => _isLoading = false);
     }
   }
 
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: _dateRange,
+      firstDate: DateTime(now.year - 5),
+      lastDate: now,
+    );
+    if (picked != null) {
+      // build range in UTC '.' Supabase times stored in UTC
+      _dateRange = DateTimeRange(
+        start: DateTime.utc(
+          picked.start.year,
+          picked.start.month,
+          picked.start.day,
+        ),
+        end: DateTime.utc(picked.end.year, picked.end.month, picked.end.day),
+      );
+      _applyFilter();
+    }
+  }
+
+  void _applyFilter() {
+    if (_dateRange == null) {
+      _filteredTimesheets = _timesheets;
+    } else {
+      _filteredTimesheets =
+          _timesheets
+              .where(
+                (timesheet) =>
+                    // e.g. when filtering 3rd to 5th, check 3rd 0000 to 5th 2359
+                    timesheet.date.compareTo(_dateRange!.start) >= 0 &&
+                    timesheet.date.compareTo(
+                          _dateRange!.end.add(const Duration(days: 1)),
+                        ) <
+                        0,
+              )
+              .toList();
+    }
+    setState(() {}); // triggers widget rebuild with new filteredTimesheets
+  }
+
   Future<void> _navigateToAddTimesheet() async {
-    var res = await context.pushNamed(
+    final res = await context.pushNamed(
       Screen.addTimesheet.name,
       queryParameters:
           isOtherUser ? {"userId": _userId, "email": widget.email} : {},
@@ -69,7 +114,7 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
   }
 
   Future<void> _navigateToEditTimesheet(int id) async {
-    var res = await context.pushNamed(
+    final res = await context.pushNamed(
       Screen.editTimesheet.name,
       pathParameters: {"id": id.toString()},
       queryParameters: isOtherUser ? {"email": widget.email} : {},
@@ -78,7 +123,20 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
   }
 
   Future<void> _deleteTimesheet(int id) async {
-    final confirm = await showDialog<bool>(
+    final confirmed = await showDeleteDialog();
+    if (confirmed) {
+      try {
+        await _repo.deleteTimesheet(id);
+        if (mounted) showSnackbar("Timesheet deleted", context, success: true);
+        _refresh();
+      } catch (e) {
+        if (mounted) showSnackbar("Failed to delete timesheet", context);
+      }
+    }
+  }
+
+  Future<bool> showDeleteDialog() async {
+    return await showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
@@ -100,61 +158,68 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
             ],
           ),
     );
-    if (confirm == true) {
-      try {
-        await _repo.deleteTimesheet(id);
-        if (mounted) showSnackbar("Timesheet deleted", context, error: false);
-        _refresh();
-      } catch (e) {
-        if (mounted) showSnackbar("Failed to delete timesheet", context);
-      }
-    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title:
-            isOtherUser
-                ? Text(
-                  "Timesheets (${widget.email})",
-                  style: TextStyle(fontSize: 20.0),
-                )
-                : const Text("Timesheets"),
-      ),
-      body: SafeArea(
-        child:
-            _isLoading || _userId == null
-                ? const Center(child: CircularProgressIndicator())
-                : _timesheets.isEmpty
-                ? const Center(child: Text("No timesheets added"))
-                : RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: _timesheets.length,
-                    separatorBuilder:
-                        (context, index) => const SizedBox(height: 4.0),
-                    itemBuilder:
-                        (context, index) => TimesheetItem(
-                          timesheet: _timesheets[index],
-                          onClickEdit:
-                              (timesheet) =>
-                                  _navigateToEditTimesheet(timesheet.id!),
-                          onClickDelete:
-                              (timesheet) => _deleteTimesheet(timesheet.id!),
-                        ),
-                  ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title:
+          isOtherUser
+              ? Text(
+                "Timesheets (${widget.email})",
+                style: TextStyle(fontSize: 20.0),
+              )
+              : const Text("Timesheets"),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.filter_alt),
+          tooltip: "Filter by date",
+          onPressed: _pickDateRange,
+        ),
+        if (_dateRange != null)
+          IconButton(
+            onPressed: () {
+              _dateRange = null;
+              _applyFilter();
+            },
+            tooltip: "Clear filter",
+            icon: const Icon(Icons.close),
+          ),
+      ],
+    ),
+    body: SafeArea(
+      child:
+          _isLoading || _userId == null
+              ? const Center(child: CircularProgressIndicator())
+              : _dateRange == null && _filteredTimesheets.isEmpty
+              ? const Center(child: Text("No timesheets added"))
+              : _filteredTimesheets.isEmpty
+              ? const Center(child: Text("No timesheets found"))
+              : RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(8.0),
+                  itemCount: _filteredTimesheets.length,
+                  separatorBuilder:
+                      (context, index) => const SizedBox(height: 4.0),
+                  itemBuilder:
+                      (context, index) => TimesheetItem(
+                        timesheet: _filteredTimesheets[index],
+                        onClickEdit:
+                            (timesheet) =>
+                                _navigateToEditTimesheet(timesheet.id!),
+                        onClickDelete:
+                            (timesheet) => _deleteTimesheet(timesheet.id!),
+                      ),
                 ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddTimesheet,
-        icon: const Icon(Icons.add),
-        label: const Text("Add Timesheet"),
-      ),
-    );
-  }
+              ),
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: _navigateToAddTimesheet,
+      icon: const Icon(Icons.add),
+      label: const Text("Add Timesheet"),
+    ),
+  );
 }
 
 class TimesheetItem extends StatelessWidget {
@@ -169,50 +234,48 @@ class TimesheetItem extends StatelessWidget {
   final Function(Timesheet) onClickDelete;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2.0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 8.0,
-          horizontal: 16.0,
-        ),
-        title: Text(
-          timesheet.date.toIso8601String().split("T")[0],
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Hours worked: ${timesheet.hours.toString()}",
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            SizedBox(height: 4.0),
-            Text(
-              "Added: ${timesheet.createdAt.toString().split(".")[0]}",
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.blue[700]),
-              tooltip: "Edit",
-              onPressed: () => onClickEdit(timesheet),
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.red[700]),
-              tooltip: "Delete",
-              onPressed: () => onClickDelete(timesheet),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => Card(
+    elevation: 2.0,
+    color: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    child: ListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 8.0,
+        horizontal: 16.0,
       ),
-    );
-  }
+      title: Text(
+        timesheet.date.toIso8601String().split("T")[0],
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Hours worked: ${timesheet.hours.toString()}",
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          SizedBox(height: 4.0),
+          Text(
+            "Added: ${timesheet.createdAt.toString().split(".")[0]}",
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: () => onClickEdit(timesheet),
+            tooltip: "Edit",
+            icon: Icon(Icons.edit, color: Colors.blue[700]),
+          ),
+          IconButton(
+            onPressed: () => onClickDelete(timesheet),
+            tooltip: "Delete",
+            icon: Icon(Icons.delete, color: Colors.red[700]),
+          ),
+        ],
+      ),
+    ),
+  );
 }

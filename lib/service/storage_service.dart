@@ -1,5 +1,6 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class StorageService {
@@ -19,7 +20,7 @@ class StorageService {
     return _supabase.storage.from("files").getPublicUrl(name);
   }
 
-  // returns PDF resource as bytes for showing
+  // returns PDF resource as bytes to be displayed
   Future<Uint8List?> getParsedFile(String name) async {
     final url = getFileUrl(name);
     final res = await http.get(Uri.parse(url));
