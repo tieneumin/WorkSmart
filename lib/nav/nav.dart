@@ -82,6 +82,7 @@ class Nav {
 }
 
 enum Screen {
+  payslip,
   login,
   signUp,
   home,

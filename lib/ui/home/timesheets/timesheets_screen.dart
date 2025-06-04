@@ -91,6 +91,10 @@ class _TimesheetsScreenState extends State<TimesheetsScreen> {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red[700],
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text("Delete"),
               ),
             ],

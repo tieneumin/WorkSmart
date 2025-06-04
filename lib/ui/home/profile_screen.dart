@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:worksmart/service/auth_service.dart';
+import 'package:worksmart/data/model/app_user.dart';
+import 'package:pdfx/pdfx.dart';
+import 'package:flutter/services.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart' as pp;
+import 'package:worksmart/widgets/payslip_pdf.dart';
 import 'package:provider/provider.dart';
 import 'package:worksmart/provider/user_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-// import 'package:intl/intl.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'dart:io';
-// import 'package:open_file/open_file.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,34 +25,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
   }
 
-  // Future<void> _downloadReceipt() async {
-  //   final user = context.read<UserProvider>().user;
-  //   if (user == null) return;
-  //   final now = DateTime.now();
-  //   final month = DateFormat('MMMM').format(now);
-  //   final dateStr = DateFormat('yyyy-MM-dd – kk:mm').format(now);
-  //   final pdf = pw.Document();
-  //   pdf.addPage(
-  //     pw.Page(
-  //       build: (pw.Context context) => pw.Column(
-  //         crossAxisAlignment: pw.CrossAxisAlignment.start,
-  //         children: [
-  //           pw.Text('Salary Receipt', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-  //           pw.SizedBox(height: 16),
-  //           pw.Text('Email: \\${user.email}'),
-  //           pw.Text('Role: \\${user.role}'),
-  //           pw.Text('Salary: RM\\${user.salary.toStringAsFixed(2)}'),
-  //           pw.Text('Month: \\${month}'),
-  //           pw.Text('Downloaded: \\${dateStr}'),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  //   final output = await getTemporaryDirectory();
-  //   final file = File("${output.path}/salary_receipt_\\${user.email}_\\${now.millisecondsSinceEpoch}.pdf");
-  //   await file.writeAsBytes(await pdf.save());
-  //   await OpenFile.open(file.path);
-  // }
+  Future<void> _showPayslip(AppUser user) async {
+    final pdfBytes = await _generatePayslip(user);
+    final document = PdfDocument.openData(pdfBytes);
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder:
+          (_) => Dialog(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: PdfView(controller: PdfController(document: document)),
+            ),
+          ),
+    );
+  }
+
+  Future<Uint8List> _generatePayslip(AppUser user) async {
+    final img = await rootBundle.load("assets/logo.png");
+    final imageBytes = img.buffer.asUint8List();
+    final regFont = pw.Font.ttf(
+      await rootBundle.load("assets/NotoSans-Regular.ttf"),
+    );
+    final boldFont = pw.Font.ttf(
+      await rootBundle.load("assets/NotoSans-Bold.ttf"),
+    );
+
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: pp.PdfPageFormat.a5.landscape,
+        build:
+            (pw.Context context) => payslipPdf(
+              email: user.email,
+              role: user.role,
+              salary: user.salary,
+              logo: imageBytes,
+              regFont: regFont,
+              boldFont: boldFont,
+            ),
+      ),
+    );
+    return await pdf.save();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 16.0),
                           Text(
-                            "Salary: RM${currentUser.salary.toStringAsFixed(2)}",
+                            "Salary: RM ${currentUser.salary.toStringAsFixed(2)}",
                             style: const TextStyle(fontSize: 16.0),
                           ),
                           const SizedBox(height: 16.0),
@@ -93,15 +108,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             "Role: ${currentUser.role}",
                             style: const TextStyle(fontSize: 16.0),
                           ),
-                          const SizedBox(height: 24.0),
-                          // ElevatedButton.icon(
-                          //   onPressed: _downloadReceipt,
-                          //   label: const Text("Download Salary Receipt"),
-                          //   icon: const Icon(Icons.download),
-                          //   style: FilledButton.styleFrom(
-                          //     minimumSize: const Size.fromHeight(48.0),
-                          //   ),
-                          // ),
+                          const SizedBox(height: 16.0),
+                          ElevatedButton.icon(
+                            onPressed: () => _showPayslip(currentUser),
+                            label: const Text("Show monthly e-payslip"),
+                            icon: const Icon(Icons.receipt),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48.0),
+                            ),
+                          ),
                           const SizedBox(height: 16.0),
                           FilledButton.icon(
                             onPressed: _authService.signOut,

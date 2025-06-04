@@ -133,7 +133,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 24.0),
+                  const SizedBox(height: 16.0),
                   _isSaving
                       ? const CircularProgressIndicator()
                       : FilledButton(

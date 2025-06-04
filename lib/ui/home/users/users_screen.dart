@@ -132,7 +132,7 @@ class UserItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Salary: RM${user.salary.toStringAsFixed(2)}",
+              "Salary: RM ${user.salary.toStringAsFixed(2)}",
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             SizedBox(height: 4.0),
